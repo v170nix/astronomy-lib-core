@@ -29,7 +29,7 @@ class Matrix() {
          * матрицы поворта вокруг осей базиса
          * elementary rotations
          */
-        internal fun getRotateX(angle: Double): Matrix {
+        private fun getRotateX(angle: Double): Matrix {
             val s = sin(angle)
             val c = cos(angle)
             return Matrix(
@@ -39,7 +39,7 @@ class Matrix() {
             )
         }
 
-        internal fun getRotateY(angle: Double): Matrix {
+        private fun getRotateY(angle: Double): Matrix {
             val s = sin(angle)
             val c = cos(angle)
             return Matrix(
@@ -49,7 +49,7 @@ class Matrix() {
             )
         }
 
-        internal fun getRotateZ(angle: Double): Matrix {
+        private fun getRotateZ(angle: Double): Matrix {
             val s = sin(angle)
             val c = cos(angle)
             return Matrix(
@@ -71,6 +71,7 @@ class Matrix() {
          */
         fun transpose(matrix: Matrix): Matrix {
             val out = Matrix()
+            (0..2).forEach { i -> (0..2).forEach { j -> out[i, j] = matrix[j, i] } }
             for (i in 0..2)
                 for (j in 0..2)
                     out[i, j] = matrix[j, i]
@@ -83,7 +84,7 @@ class Matrix() {
          * @param vector вектор
          * @return новый вектор
          */
-        fun timesMV(matrix: Matrix, vector: Vector): Vector {
+        internal fun timesMV(matrix: Matrix, vector: Vector): Vector {
             val v = (vector.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector)
             return RectangularVector().apply {
                 (0..2).forEach { i -> this[i] = (0..2).sumByDouble { j -> matrix[i, j] * v[j] } }
@@ -96,7 +97,7 @@ class Matrix() {
          * @param matrix матрица
          * @return новый вектор
          */
-        fun timesVM(vector: Vector, matrix: Matrix): Vector {
+        internal fun timesVM(vector: Vector, matrix: Matrix): Vector {
             val v = (vector.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector)
             return RectangularVector().apply {
                 (0..2).forEach { j -> this[j] = (0..2).sumByDouble { i -> v[i] * matrix[i, j] } }
@@ -109,7 +110,7 @@ class Matrix() {
          * @param right матрица
          * @return новая матрица
          */
-        fun times(left: Matrix, right: Matrix): Matrix {
+        private fun times(left: Matrix, right: Matrix): Matrix {
             return Matrix().apply {
                 (0..2).forEach { i ->
                     (0..2).forEach { j -> this[i, j] = (0..2).sumByDouble { k -> left[i, k] * right[k, j] } }
@@ -138,6 +139,10 @@ class Matrix() {
     operator fun times(right: Matrix) = Companion.times(this, right)
 
     operator fun times(right: Vector) = Companion.timesMV(this, right)
+
+    operator fun timesAssign(matrix: Matrix) {
+        elements = (this * matrix).elements
+    }
 
     operator fun get(i: Int, j: Int) = elements[i][j]
 
