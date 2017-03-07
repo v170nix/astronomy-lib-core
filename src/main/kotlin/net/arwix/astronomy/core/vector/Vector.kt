@@ -17,8 +17,6 @@
 package net.arwix.astronomy.core.vector
 
 import java.lang.Math.*
-import sun.org.mozilla.javascript.internal.Context.toType
-
 
 
 abstract class Vector {
@@ -193,6 +191,10 @@ abstract class Vector {
 
     operator fun timesAssign(vector: Vector) {
         set(this * vector)
+    }
+
+    operator fun timesAssign(matrix: Matrix) {
+        set(this * matrix)
     }
 
     operator fun divAssign(scalar: Double) {
