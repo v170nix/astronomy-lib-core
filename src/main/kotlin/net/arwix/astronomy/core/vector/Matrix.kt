@@ -16,7 +16,8 @@
 
 package net.arwix.astronomy.core.vector
 
-import java.lang.Math.*
+import java.lang.Math.cos
+import java.lang.Math.sin
 
 
 class Matrix() {

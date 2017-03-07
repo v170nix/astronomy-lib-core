@@ -16,19 +16,13 @@
 
 package net.arwix.astronomy.core
 
-import net.arwix.astronomy.core.calendar.CalendarMath
+import net.arwix.astronomy.core.calendar.getJT
 import org.junit.After
+import org.junit.Assert.assertArrayEquals
 import org.junit.Before
 import org.junit.Test
-
-import org.junit.Assert.*
 import java.util.*
 import java.util.Calendar.*
-import java.util.Locale
-import net.arwix.astronomy.core.vector.VectorType
-import net.arwix.astronomy.core.vector.SphericalVector
-
-
 
 
 class AstroMathTest {
@@ -46,9 +40,7 @@ class AstroMathTest {
             this[SECOND] = 0
             this[MILLISECOND] = 0
         }
-        val mjd = CalendarMath.getMJD(calendar)
-        val deltaT = CalendarMath.getDeltaTofDay(calendar)
-        t =CalendarMath.getJT(mjd + deltaT)
+        t = calendar.getJT(true)
     }
 
     @After
