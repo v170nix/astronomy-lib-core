@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+@file:JvmName("CalendarExtensions")
 package net.arwix.astronomy.core.calendar
 
 import net.arwix.astronomy.core.MJD_J2000
@@ -99,6 +99,10 @@ fun Calendar.getDeltaT(unit: TimeUnit): Double {
     val dt: Double
 
     dt = when (y) {
+        in 2005..2050 -> {
+            val t = y - 2000.0
+            62.92 + (0.32217 + 0.005589 * t) * t
+        }
         in -1999..-500 -> -20.0 + 32.0 * (get(YEAR) - 1820.0) / 100.0
         in -500..500 -> {
             val u = y / 100.0
@@ -143,10 +147,6 @@ fun Calendar.getDeltaT(unit: TimeUnit): Double {
         in 1086..2005 -> {
             val u = y - 2000.0
             63.86 + (0.3345 + (-0.060374 + (0.0017275 + (0.000651814 + 0.00002373599 * u) * u) * u) * u) * u
-        }
-        in 2005..2050 -> {
-            val t = y - 2000.0
-            62.92 + (0.32217 + 0.005589 * t) * t
         }
         in 2050..2150 -> -20.0 + 32.0 * pow((y - 1820.0) / 100.0, 2.0) - 0.5628 * (2150.0 - y)
         in 2150..3000 -> -20.0 + 32.0 * pow((y - 1820.0) / 100.0, 2.0)
