@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+@file:JvmName("Constants")
 package net.arwix.astronomy.core
 
 val PI2 = 2.0 * Math.PI
