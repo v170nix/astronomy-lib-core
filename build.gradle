@@ -42,7 +42,7 @@ apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 
 group 'net.arwix.astronomy'
-version '0.1a'
+version '0.1-alpha'
 
 bintray {
     user = 'v170nix'
@@ -55,7 +55,7 @@ bintray {
         vcsUrl = 'https://github.com/v170nix/astronomy-lib-core.git'
 
         version {
-            name = '0.1a'
+            name = '0.1-alpha'
         }
 
         publications = ['MyPublication']
@@ -69,7 +69,7 @@ publishing {
             from components.java
             groupId 'net.arwix.astronomy'
             artifactId 'astronomy-core'
-            version '0.1a'
+            version '0.1a-aplha'
         }
     }
 }
