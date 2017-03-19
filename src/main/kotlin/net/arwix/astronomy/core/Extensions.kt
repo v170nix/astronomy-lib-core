@@ -21,3 +21,12 @@ fun frac(x: Double): Double {
 }
 
 infix fun Double.modulo(y: Double) = y * frac(this / y)
+
+fun Double.polynomial(vararg coefficients: Double): Double {
+    var p = 1.0
+    var result = 0.0
+    for (c in coefficients) {
+        result += c * p; p *= this
+    }
+    return result
+}

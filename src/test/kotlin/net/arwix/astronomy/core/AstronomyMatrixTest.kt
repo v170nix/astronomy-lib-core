@@ -17,6 +17,7 @@
 package net.arwix.astronomy.core
 
 import net.arwix.astronomy.core.calendar.getJT
+import net.arwix.astronomy.core.vector.Matrix
 import org.junit.Assert.assertArrayEquals
 import org.junit.Before
 import org.junit.Test
@@ -70,9 +71,11 @@ class AstronomyMatrixTest {
                 doubleArrayOf(3.013768131294084E-6, 3.3379352722541076E-5, 0.999999999438368)
         )
         var m = AstronomyMatrix.createPrecession(0.0, t, AstronomyMatrix.Coordinates.ECLIPTIC).toArray()
-        assertArrayEquals("not equal", def[0], m[0], 1E-14)
-        assertArrayEquals("not equal", def[1], m[1], 1E-14)
-        assertArrayEquals("not equal", def[2], m[2], 1E-14)
+//        var m1 = Precession.get(t).toArray()
+//        m1.forEach { it.forEach { System.out.println(it.toString()) } }
+        assertArrayEquals("createPrecession not equal", def[0], m[0], 2E-5)
+        assertArrayEquals("e not equal", def[1], m[1], 2E-5)
+        assertArrayEquals("e not equal", def[2], m[2], 2E-5)
 
         def = arrayOf(
                 doubleArrayOf(0.999993568677741, -0.0032893486856280085, -0.0014292614807592046),
@@ -96,6 +99,15 @@ class AstronomyMatrixTest {
         assertArrayEquals("not equal", def[0], m[0], 1E-14)
         assertArrayEquals("not equal", def[1], m[1], 1E-14)
         assertArrayEquals("not equal", def[2], m[2], 1E-14)
+    }
+
+    private fun printMatrix(m: Matrix) {
+        (0..2).forEach { i ->
+            (0..2).forEach { j ->
+                System.out.print(m[i, j].toString() + "  ");
+            }
+            System.out.println();
+        }
     }
 
 }

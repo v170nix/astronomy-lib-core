@@ -35,24 +35,24 @@ abstract class VsopData(private val epoch: Epoch, private val obj: VsopObject) :
                 Z0(innerT) + Z1(innerT) + Z2(innerT) + Z3(innerT) + Z4(innerT) + Z5(innerT))
     }
 
-    abstract fun X0(T: Double): Double
-    abstract fun X1(T: Double): Double
-    abstract fun X2(T: Double): Double
-    abstract fun X3(T: Double): Double
-    abstract fun X4(T: Double): Double
-    abstract fun X5(T: Double): Double
+    abstract protected fun X0(T: Double): Double
+    abstract protected fun X1(T: Double): Double
+    abstract protected fun X2(T: Double): Double
+    abstract protected fun X3(T: Double): Double
+    abstract protected fun X4(T: Double): Double
+    abstract protected fun X5(T: Double): Double
 
-    abstract fun Y0(T: Double): Double
-    abstract fun Y1(T: Double): Double
-    abstract fun Y2(T: Double): Double
-    abstract fun Y3(T: Double): Double
-    abstract fun Y4(T: Double): Double
-    abstract fun Y5(T: Double): Double
+    abstract protected fun Y0(T: Double): Double
+    abstract protected fun Y1(T: Double): Double
+    abstract protected fun Y2(T: Double): Double
+    abstract protected fun Y3(T: Double): Double
+    abstract protected fun Y4(T: Double): Double
+    abstract protected fun Y5(T: Double): Double
 
-    abstract fun Z0(T: Double): Double
-    abstract fun Z1(T: Double): Double
-    abstract fun Z2(T: Double): Double
-    abstract fun Z3(T: Double): Double
-    abstract fun Z4(T: Double): Double
-    abstract fun Z5(T: Double): Double
+    abstract protected fun Z0(T: Double): Double
+    abstract protected fun Z1(T: Double): Double
+    abstract protected fun Z2(T: Double): Double
+    abstract protected fun Z3(T: Double): Double
+    abstract protected fun Z4(T: Double): Double
+    abstract protected fun Z5(T: Double): Double
 }

@@ -17,7 +17,6 @@
 package net.arwix.astronomy.core
 
 import net.arwix.astronomy.core.vector.Matrix
-
 object AstronomyMatrix {
 
     enum class Coordinates {ECLIPTIC, EQUATORIAL }

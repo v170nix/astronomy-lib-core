@@ -23,7 +23,7 @@ import net.arwix.astronomy.core.vector.Vector
 import java.lang.IllegalArgumentException
 
 
-class Position(val earthEclipticCoordinates: EclipticCoordinates<*>) {
+class Position(private val earthEclipticCoordinates: EclipticCoordinates<*>) {
 
     var cacheListener: CacheListener? = null
 

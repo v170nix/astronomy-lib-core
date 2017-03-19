@@ -8,30 +8,6 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
-
-//    ext {
-//        bintrayRepo = 'astronomy'
-//        bintrayName = 'core'
-//
-//        publishedGroupId = 'com.arwix.astronomy'
-//        libraryName = 'astronomy-core'
-//        artifact = 'core'
-//
-//        libraryDescription = ''
-//
-//        siteUrl = 'https://github.com/v170nix/astronomy-lib-core'
-//        gitUrl = 'https://github.com/v170nix/astronomy-lib-core.git'
-//
-//        libraryVersion = '0.9'
-//
-//        developerId = 'v170nix'
-//        developerName = 'Vitaliy Sheyanov'
-//        developerEmail = 'vit.onix@gmail.com'
-//
-//        licenseName = 'The Apache Software License, Version 2.0'
-//        licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-//        allLicenses = ["Apache-2.0"]
-//    }
 }
 
 plugins {
@@ -42,11 +18,11 @@ apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 
 group 'net.arwix.astronomy'
-version '0.1-alpha'
+version '0.62'
 
 bintray {
     user = 'v170nix'
-    key =  project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+    key =  project.property('bintrayApiKey')
     pkg {
         repo = 'astronomy'
         name = 'astronomy-lib-core'
@@ -55,7 +31,7 @@ bintray {
         vcsUrl = 'https://github.com/v170nix/astronomy-lib-core.git'
 
         version {
-            name = '0.1-alpha'
+            name = project.version
         }
 
         publications = ['MyPublication']
@@ -69,7 +45,7 @@ publishing {
             from components.java
             groupId 'net.arwix.astronomy'
             artifactId 'astronomy-core'
-            version '0.1-alpha'
+            version project.version
         }
     }
 }

@@ -16,4 +16,4 @@
 
 package net.arwix.astronomy.vsop87
 
-enum class VsopObject { SUN, MERCURY, VENUS, EARTH, MARS, JUPITER, SATURN, URANUS, NEPTUNE }
+enum class VsopObject { MERCURY, VENUS, EARTH, MARS, JUPITER, SATURN, URANUS, NEPTUNE }
