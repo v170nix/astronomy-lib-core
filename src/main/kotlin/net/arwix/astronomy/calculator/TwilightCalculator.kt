@@ -23,8 +23,8 @@ import java.lang.Math.sin
 import java.lang.Math.toRadians
 import java.util.*
 
-class TwilightCalculator(date: Calendar, location: Location, type: TwilightType, getSunGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector) :
-        BaseEventCalculator(date, location, type.sinRefractionAngle, getSunGeocentricEquatorialCoordinates) {
+class TwilightCalculator(date: Calendar, location: Location, getGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector, type: TwilightType) :
+        Calculator<TwilightCalculator.TwilightResult>(date, location, getGeocentricEquatorialCoordinates) {
 
     sealed class TwilightResult(open val type: TwilightType) {
         data class Begin(override val type: TwilightType, val calendar: Calendar) : TwilightResult(type)
@@ -35,33 +35,32 @@ class TwilightCalculator(date: Calendar, location: Location, type: TwilightType,
 
     enum class TwilightType constructor(angle: Double) {
         CIVIL(-6.0), NAUTICAL(-12.0), ASTRONOMICAL(-18.0);
-
         internal val sinRefractionAngle = sin(toRadians(angle))
     }
 
-    private var innerCalculator: RiseSetCalculator = RiseSetCalculator(date, location, type.sinRefractionAngle, getSunGeocentricEquatorialCoordinates)
-
-    var result: TwilightResult? = null
-        get() {
-            if (!isValid) {
-                val innerResult = innerCalculator.result
-                result = when (innerResult) {
-                    is RiseSetCalculator.Result.RiseSet -> TwilightResult.BeginEnd(type, innerResult.rise.calendar, innerResult.set.calendar)
-                    is RiseSetCalculator.Result.Rise -> TwilightResult.Begin(type, innerResult.calendar)
-                    is RiseSetCalculator.Result.Set -> TwilightResult.End(type, innerResult.calendar)
-                    is RiseSetCalculator.Result.None -> TwilightResult.None(type, innerResult.isAbove)
-                    null -> TODO()
-                }
-                isValid = true
-            }
-            return result
-        }
+    private var innerCalculator: RiseSetCalculator = RiseSetCalculator(date, location, getCoordinates, type.sinRefractionAngle)
 
     var type: TwilightType = type
         set(value) {
-            isValid = false
-            field = value
+            if (value != field) {
+                isValidResult = false
+                innerCalculator.sinRefractionAngle = value.sinRefractionAngle
+                field = value
+            }
         }
+
+    override fun calls(): TwilightResult {
+        if (innerCalculator.date.timeInMillis != date.timeInMillis || innerCalculator.location != location) {
+            innerCalculator = RiseSetCalculator(date, location, getCoordinates, type.sinRefractionAngle)
+        }
+        val innerResult = innerCalculator.getResult()
+        return when (innerResult) {
+            is RiseSetCalculator.Result.RiseSet -> TwilightResult.BeginEnd(type, innerResult.rise.calendar, innerResult.set.calendar)
+            is RiseSetCalculator.Result.Rise -> TwilightResult.Begin(type, innerResult.calendar)
+            is RiseSetCalculator.Result.Set -> TwilightResult.End(type, innerResult.calendar)
+            is RiseSetCalculator.Result.None -> TwilightResult.None(type, innerResult.isAbove)
+        }
+    }
 
 
 }

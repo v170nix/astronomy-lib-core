@@ -17,20 +17,18 @@
 package net.arwix.astronomy.calculator
 
 import net.arwix.astronomy.core.Epoch
-import net.arwix.astronomy.core.MJD_J2000
-import net.arwix.astronomy.core.calendar.getGMST
+import net.arwix.astronomy.core.calendar.getDeltaT
 import net.arwix.astronomy.core.calendar.getMJD
 import net.arwix.astronomy.core.calendar.resetTime
 import net.arwix.astronomy.core.calendar.setHours
 import net.arwix.astronomy.core.coordinates.Location
-import net.arwix.astronomy.core.vector.SphericalVector
 import net.arwix.astronomy.core.vector.Vector
-import net.arwix.astronomy.core.vector.VectorType
 import net.arwix.astronomy.math.QuadraticInterpolator
 import java.lang.Math.*
 import java.util.*
+import java.util.concurrent.TimeUnit
 
-class RiseSetCalculator : BaseEventCalculator {
+class RiseSetCalculator : Calculator<RiseSetCalculator.Result> {
 
 
     sealed class Result {
@@ -40,6 +38,13 @@ class RiseSetCalculator : BaseEventCalculator {
         data class None(val isAbove: Boolean) : Result()
     }
 
+    internal var sinRefractionAngle: Double
+        set(value) {
+            if (value != field) {
+                isValidResult = false;
+                field = value
+            }
+        }
 
     enum class ObjectType constructor(angle: Double) {
         SUN(-0.833), MOON(+0.133), DOT(-0.5667);
@@ -47,39 +52,14 @@ class RiseSetCalculator : BaseEventCalculator {
         internal val sinRefractionAngle = sin(toRadians(angle))
     }
 
+    constructor (date: Calendar, location: Location, getGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector, type: ObjectType) :
+            super(date, location, getGeocentricEquatorialCoordinates) {
+        this.sinRefractionAngle = type.sinRefractionAngle
+    }
 
-//    private lateinit var innerDate: Calendar
-//    private var deltaT: Double = 0.0
-//    private var isValid = false
-//    private val getGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector
-
-    internal constructor (date: Calendar, location: Location, sinRefractionAngle: Double, getGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector) :
-            super(date, location, sinRefractionAngle, getGeocentricEquatorialCoordinates)
-
-    public constructor (date: Calendar, location: Location, type: ObjectType, getGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector) :
-            super(date, location, type.sinRefractionAngle, getGeocentricEquatorialCoordinates)
-
-    var result: Result? = null
-        get() {
-            if (!isValid) result = calls()
-            return result
-        }
-
-
-    /**
-     * Синус высоты объекта над горизонтом
-     * @param MJD         на расчетную дату
-     * @param longitude   долгота в радианах
-     * @param cosLatitude косинус широты
-     * @param sinLatitude синус широты
-     * @return cинус высоты Солнца или Луны в момент искомого события
-     */
-    private fun getSinAltitude(MJD: Double, longitude: Double, cosLatitude: Double, sinLatitude: Double): Double {
-        val T = (MJD - MJD_J2000 - deltaT) / 36525.0
-        val p = getGeocentricEquatorialCoordinates(T, Epoch.APPARENT).getVectorOfType(VectorType.SPHERICAL) as SphericalVector
-        // часовой угол
-        val tau = getGMST(MJD) + longitude - p.phi
-        return sinLatitude * sin(p.theta) + cosLatitude * cos(p.theta) * cos(tau)
+    internal constructor (date: Calendar, location: Location, getGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector, sinRefractionAngle: Double) :
+            super(date, location, getGeocentricEquatorialCoordinates) {
+        this.sinRefractionAngle = sinRefractionAngle
     }
 
     /**
@@ -89,8 +69,10 @@ class RiseSetCalculator : BaseEventCalculator {
      *
      * @return @see RiseSet
      */
-    protected fun calls(): Result {
-        isValid = false
+    override fun calls(): Result {
+        isValidResult = false
+        val innerDate = Calendar.getInstance(date.timeZone).apply { this.time = date.time }
+        deltaT = innerDate.getDeltaT(TimeUnit.DAYS)
         // latitude = 65.5;
         // 27.05.2012
 //        final double refraction = getSinRefractionAngle(event);
@@ -137,7 +119,6 @@ class RiseSetCalculator : BaseEventCalculator {
             y_minus = y_plus // подготовка к обработке следующего интервала
             hour += 2.0
         } while (!((hour == 25.0) || (rise != null && set != null)))
-        isValid = true
         if (rise != null && set != null) return Result.RiseSet(rise, set)
         if (rise != null) return rise
         if (set != null) return set
