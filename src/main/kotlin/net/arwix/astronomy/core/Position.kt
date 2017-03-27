@@ -23,7 +23,7 @@ import net.arwix.astronomy.core.vector.Vector
 import java.lang.IllegalArgumentException
 
 
-class Position(private val earthEclipticCoordinates: EclipticCoordinates<*>) {
+open class Position(private val earthEclipticCoordinates: EclipticCoordinates<*>) {
 
     var cacheListener: CacheListener? = null
 
@@ -38,8 +38,8 @@ class Position(private val earthEclipticCoordinates: EclipticCoordinates<*>) {
      * @return Vector
      */
     fun getHeliocentricEclipticPosition(T: Double, objectEclipticCoordinates: EclipticCoordinates<*>): Vector {
-        val earthEcliptic = getData(earthEclipticCoordinates, T)
-        val objectEcliptic = getData(objectEclipticCoordinates, T)
+        val earthEcliptic = getData(T, earthEclipticCoordinates)
+        val objectEcliptic = getData(T, objectEclipticCoordinates)
         val objGeoEcliptic = objectEcliptic - earthEcliptic
         val dT = objGeoEcliptic.normalize() / C_Light / 36525.0
         return objectEclipticCoordinates.getEclipticCoordinates(T - dT)
@@ -53,15 +53,15 @@ class Position(private val earthEclipticCoordinates: EclipticCoordinates<*>) {
     fun getGeocentricEquatorialPosition(T: Double, objectEclipticCoordinates: EclipticCoordinates<*>): Vector {
         if (earthEclipticCoordinates.getEpoch() != objectEclipticCoordinates.getEpoch()) throw IllegalArgumentException("Epoch don't equal")
 
-        var earthEcliptic = getData(earthEclipticCoordinates, T)
-        var objectEcliptic = getData(objectEclipticCoordinates, T)
+        var earthEcliptic = getData(T, earthEclipticCoordinates)
+        var objectEcliptic = getData(T, objectEclipticCoordinates)
         var objGeoEcliptic = objectEcliptic - earthEcliptic
         val dT = objGeoEcliptic.normalize() / C_Light / 36525.0
         val innerT = T - dT
         when (earthEclipticCoordinates.getEpoch()) {
             Epoch.APPARENT -> {
-                earthEcliptic = getData(earthEclipticCoordinates, innerT)
-                objectEcliptic = getData(objectEclipticCoordinates, innerT)
+                earthEcliptic = getData(innerT, earthEclipticCoordinates)
+                objectEcliptic = getData(innerT, objectEclipticCoordinates)
                 objGeoEcliptic = objectEcliptic - earthEcliptic
                 return AstronomyMatrix.createNutation(innerT) * AstronomyMatrix.createTransformationCoordinates(innerT, ECLIPTIC, EQUATORIAL) * objGeoEcliptic
 
@@ -75,7 +75,7 @@ class Position(private val earthEclipticCoordinates: EclipticCoordinates<*>) {
 
     }
 
-    private fun getData(coordinates: EclipticCoordinates<*>, T: Double): Vector {
+    private fun getData(T: Double, coordinates: EclipticCoordinates<*>): Vector {
         return cacheListener?.let { listener ->
             listener.getEclipticCacheData(coordinates.getIdObject().toString(), T)
                     ?.let { return it }
