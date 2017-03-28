@@ -36,7 +36,7 @@ class CulminationCalculator(date: Calendar, location: Location, getGeocentricEqu
     sealed class CulminationResult {
         data class Upper(val isAbove: Boolean, val calendar: Calendar) : CulminationResult()
         data class Lower(val isAbove: Boolean, val calendar: Calendar) : CulminationResult()
-        data class UpperLover(val upper: Upper, val lower: Lower) : CulminationResult()
+        data class UpperLower(val upper: Upper, val lower: Lower) : CulminationResult()
     }
 
 
@@ -52,7 +52,7 @@ class CulminationCalculator(date: Calendar, location: Location, getGeocentricEqu
                 .let {
                     val upperTime = Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(it.max) }
                     val lowerTime = Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(it.min) }
-                    CulminationResult.UpperLover(
+                    CulminationResult.UpperLower(
                             CulminationResult.Upper(
                                     getSinAltitude(upperTime.getMJD(), location.longitude, cosLatitude, sinLatitude) > 0.0,
                                     upperTime

@@ -47,13 +47,13 @@ data class AzimuthCoordintates(val lambda: Double, val phi: Double) {
      * @param geoEquatorialVector ГеоЦентрические экваториальные координаты
      * @return азимутальный вектор
      */
-    fun getCoordinates(GMST: Double, geoEquatorialVector: Vector): SphericalVector {
+    fun getCoordinates(GMST: Double, geoEquatorialVector: Vector): Vector {
         val vector: SphericalVector = geoEquatorialVector.getVectorOfType(VectorType.SPHERICAL) as SphericalVector
         val tau = GMST + lambda - vector.phi
-        return (hourMatrix * SphericalVector(tau, vector.theta, vector.r).getVectorOfType(VectorType.SPHERICAL)) as SphericalVector
+        return hourMatrix * SphericalVector(tau, vector.theta, vector.r)
     }
 
-    fun getCoordinates(calendar: Calendar, geoEquatorialVector: Vector): SphericalVector = getCoordinates(calendar.getGMST(), geoEquatorialVector)
+    fun getCoordinates(calendar: Calendar, geoEquatorialVector: Vector): Vector = getCoordinates(calendar.getGMST(), geoEquatorialVector)
 
 
 }
