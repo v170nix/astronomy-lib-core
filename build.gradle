@@ -18,7 +18,7 @@ apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 
 group 'net.arwix.astronomy'
-version '0.66'
+version '0.67'
 
 bintray {
     user = 'v170nix'
@@ -59,4 +59,5 @@ dependencies {
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-runtime', version: '1.1.0'
     testCompile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     testCompile "junit:junit:4.12"
+    testCompile "net.arwix.astronomy:astronomy-vsop87-c:0.66"
 }

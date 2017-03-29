@@ -23,7 +23,7 @@ import net.arwix.astronomy.core.calendar.resetTime
 import net.arwix.astronomy.core.calendar.setHours
 import net.arwix.astronomy.core.coordinates.Location
 import net.arwix.astronomy.core.vector.Vector
-import net.arwix.astronomy.math.SearchExtremumGoldenSection
+import net.arwix.astronomy.math.SearchExtremumGoldenMethod
 import java.lang.Math.cos
 import java.lang.Math.sin
 import java.util.*
@@ -47,7 +47,7 @@ class CulminationCalculator(date: Calendar, location: Location, getGeocentricEqu
         val MJD0 = innerDate.getMJD()
         val cosLatitude = cos(location.latitude)
         val sinLatitude = sin(location.latitude)
-        return SearchExtremumGoldenSection(0.0, 24.0, Math.ulp(100.0), 50,
+        return SearchExtremumGoldenMethod(0.0, 24.0, Math.ulp(100.0), 50,
                 { x -> getSinAltitude(MJD0 + x / 24.0, location.longitude, cosLatitude, sinLatitude) })
                 .let {
                     val upperTime = Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(it.max) }

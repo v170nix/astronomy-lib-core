@@ -23,7 +23,7 @@ package net.arwix.astronomy.math
  * @param e        желаемая ночность
  * @param maxSteps максимальное число шагов
  */
-class SearchExtremumGoldenSection(private val a: Double, private val b: Double, private val e: Double, private val maxSteps: Int, private val function: (x: Double) -> Double)
+class SearchExtremumGoldenMethod(private val a: Double, private val b: Double, private val e: Double, private val maxSteps: Int, private val function: (x: Double) -> Double)
 //  this.function = f
 {
 

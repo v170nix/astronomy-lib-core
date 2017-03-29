@@ -73,6 +73,7 @@ abstract class QuadraticInterpolator {
                 if (root1 < -1.0) {
                     root1 = root2
                 }
+                if (count == 0) return Result.None(extremum)
                 if (count > 1) return Result.Roots(extremum, root1, root2) else return Result.Root(extremum, root1)
             } else
                 return Result.None(extremum)
