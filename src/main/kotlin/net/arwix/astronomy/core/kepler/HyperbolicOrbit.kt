@@ -16,80 +16,86 @@
 
 package net.arwix.astronomy.core.kepler
 
-import net.arwix.astronomy.core.PI2
-import net.arwix.astronomy.core.modulo
 import net.arwix.astronomy.core.vector.RectangularVector
 import java.lang.Math.*
 
 
-object EllipticOrbit {
+object HyperbolicOrbit {
 
     //------------------------------------------------------------------------------
 //
-// EccAnom: computes the eccentric anomaly for elliptic orbits
+// HypAnom: computes the eccentric anomaly for hyperbolic orbits
 //
 // Input:
 //
-//   M        Mean anomaly in [rad]
-//   e        Eccentricity of the orbit [0,1[
+//   Mh       Mean anomaly in [rad]
+//   e        Eccentricity of the orbit (>1)
 //
 // <return>:  Eccentric anomaly in [rad]
 //
 //------------------------------------------------------------------------------
-    fun getAnomaly(M: Double, e: Double): Double {
+    fun getAnomaly(Mh: Double, e: Double): Double {
         //
         // Constants
         //
         val maxit = 15
         val eps = Math.ulp(100.0)
-
-
         //
         // Variables
         //
         var i = 0
         var f: Double
         // Starting value
-        val M = M.modulo(PI2)
-        var E = if (e < 0.8) M else Math.PI
-
+        var H = log(2.0 * abs(Mh) / e + 1.8)
+        if (Mh < 0.0) H = -H
         // Iteration
         do {
-            f = E - e * sin(E) - M
-            E -= f / (1.0 - e * cos(E))
+            f = e * sinh(H) - H - Mh
+            H -= f / (e * cosh(H) - 1.0)
             ++i
             if (i == maxit) {
-                throw IndexOutOfBoundsException(" Convergence problems in EccAnom")
+                throw IndexOutOfBoundsException(" Convergence problems in HypAnom")
             }
-        } while (abs(f) > eps)
-
-        return E
+        } while (abs(f) > eps * (1.0 + abs(H + Mh)))
+        return H
     }
 
     //------------------------------------------------------------------------------
 //
-// Ellip: computes position and velocity vectors for elliptic orbits
+// Hyperb: computes position and velocity vectors for elliptic orbits
 //
 // Input:
 //
 //   GM       Product of gravitational constant and centre mass [AU^3*d^-2]
-//   M        Mean anomaly in [rad]
-//   a        Semi-major axis of the orbit in [AU]
-//   e        Eccentricity of the orbit (<1)
+//   t0       Time of perihelion passage
+//   t        Time for calculation
+//   a        Semimajor axis of the orbit in [AU]
+//   e        Eccentricity of the orbit (>1)
 //
 // Output:
 //
 //   r        Position w.r.t. orbital plane in [AU]
 //   v        Velocity w.r.t. orbital plane in [AU/d]
 //
+// Note: t0 and t in Julian centuries since J2000
+//
 //------------------------------------------------------------------------------
-    fun getOrbitalPlane(GM: Double, M: Double, a: Double, e: Double): OrbitalPlane {
+    fun getOrbitalPlane(GM: Double, t0: Double, t: Double, a: Double, e: Double): OrbitalPlane {
+        //
+        // Variables
+        //
+        val a = abs(a)
         val k = sqrt(GM / a)
-        val E = getAnomaly(M, e)
-        val cosE = cos(E)
-        val sinE = sin(E)
-        val fac = sqrt((1.0 - e) * (1.0 + e))
-        val rho = 1.0 - e * cosE
-        return OrbitalPlane(RectangularVector(a * (cosE - e), a * fac * sinE, 0.0), RectangularVector(-k * sinE / rho, k * fac * cosE / rho, 0.0))
+
+        val Mh = k * (t - t0) / a
+        val H = getAnomaly(Mh, e)
+        val coshH = cosh(H)
+        val sinhH = sinh(H)
+        val fac = sqrt((e + 1.0) * (e - 1.0))
+        val rho = e * coshH - 1.0
+
+
+        return OrbitalPlane(RectangularVector(a * (e - coshH), a * fac * sinhH, 0.0), RectangularVector(-k * sinhH / rho, k * fac * coshH / rho, 0.0))
     }
+
 }
