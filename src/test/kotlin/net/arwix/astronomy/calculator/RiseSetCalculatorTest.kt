@@ -16,13 +16,7 @@
 
 package net.arwix.astronomy.calculator
 
-import net.arwix.astronomy.core.Epoch
-import net.arwix.astronomy.core.Position
-import net.arwix.astronomy.core.coordinates.EclipticCoordinates
-import net.arwix.astronomy.core.coordinates.Location
-import net.arwix.astronomy.core.vector.RectangularVector
-import net.arwix.astronomy.core.vector.Vector
-import net.arwix.astronomy.vsop87.CEarthData
+//import net.arwix.astronomy.vsop87.CEarthData
 import org.junit.Test
 import java.util.*
 
@@ -30,39 +24,39 @@ import java.util.*
 class RiseSetCalculatorTest {
     @Test
     fun calls() {
-        val date = Calendar.getInstance(TimeZone.getTimeZone("GMT+4"));
-        date.set(Calendar.YEAR, 2014);
-        date.set(Calendar.MONTH, 8);
-        date.set(Calendar.DAY_OF_MONTH, 14);
-        date.set(Calendar.HOUR_OF_DAY, 20);
-        val location = Location(Math.toRadians(30.3290233), Math.toRadians(59.909328));
-
-        val c = RiseSetCalculator(date, location, { t: Double, e: Epoch ->
-
-            Position(CEarthData()).getGeocentricEquatorialPosition(t, object : EclipticCoordinates<Any> {
-                override fun getEpoch(): Epoch {
-                    return e
-                }
-
-                override fun getIdObject(): Any {
-                    return "Sun"
-                }
-
-                override fun getEclipticCoordinates(T: Double): Vector {
-                    return RectangularVector(0.0, 0.0, 0.0)
-                }
-
-            })
-
-        }, RiseSetCalculator.ObjectType.SUN)
-
-        c.getResult().let {
-            when (it) {
-                is RiseSetCalculator.Result.RiseSet -> {
-                    printResult(it.set.calendar.timeInMillis)
-                }
-            }
-        }
+//        val date = Calendar.getInstance(TimeZone.getTimeZone("GMT+4"));
+//        date.set(Calendar.YEAR, 2014);
+//        date.set(Calendar.MONTH, 8);
+//        date.set(Calendar.DAY_OF_MONTH, 14);
+//        date.set(Calendar.HOUR_OF_DAY, 20);
+//        val location = Location(Math.toRadians(30.3290233), Math.toRadians(59.909328));
+//
+//        val c = RiseSetCalculator(date, location, { t: Double, e: Epoch ->
+//
+//            Position(CEarthData()).getGeocentricEquatorialPosition(t, object : EclipticCoordinates<Any> {
+//                override fun getEpoch(): Epoch {
+//                    return e
+//                }
+//
+//                override fun getIdObject(): Any {
+//                    return "Sun"
+//                }
+//
+//                override fun getEclipticCoordinates(T: Double): Vector {
+//                    return RectangularVector(0.0, 0.0, 0.0)
+//                }
+//
+//            })
+//
+//        }, RiseSetCalculator.ObjectType.SUN)
+//
+//        c.getResult().let {
+//            when (it) {
+//                is RiseSetCalculator.Result.RiseSet -> {
+//                    printResult(it.set.calendar.timeInMillis)
+//                }
+//            }
+//        }
 
     }
 
