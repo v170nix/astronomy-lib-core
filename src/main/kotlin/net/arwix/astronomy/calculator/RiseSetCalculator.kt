@@ -16,6 +16,9 @@
 
 package net.arwix.astronomy.calculator
 
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.runBlocking
 import net.arwix.astronomy.core.Epoch
 import net.arwix.astronomy.core.calendar.getDeltaT
 import net.arwix.astronomy.core.calendar.getMJD
@@ -77,52 +80,59 @@ class RiseSetCalculator : Calculator<RiseSetCalculator.Result> {
         // 27.05.2012
 //        final double refraction = getSinRefractionAngle(event);
         innerDate.resetTime()
-        val MJD0 = innerDate.getMJD()
-        val cosLatitude = cos(location.latitude)
-        val sinLatitude = sin(location.latitude)
 
-        var hour = 1.0
-        var y_0: Double
-        var y_plus: Double
 
-        // Инициализация поиска
-        var y_minus = getSinAltitude(MJD0 + (hour - 1.0) / 24.0, location.longitude, cosLatitude, sinLatitude) - sinRefractionAngle
+        return runBlocking<Result> {
+            val MJD0 = innerDate.getMJD()
+            val cosLatitude = cos(location.latitude)
+            val sinLatitude = sin(location.latitude)
 
-        var rise: Result.Rise? = null
-        var set: Result.Set? = null
+            var hour = 1.0
+            var y_0: Double
+            var y_plus: Double
 
-        // перебор интервалов [0h-2h] to [22h-24h]
-        do {
-            y_0 = getSinAltitude(MJD0 + hour / 24.0, location.longitude, cosLatitude, sinLatitude) - sinRefractionAngle
-            y_plus = getSinAltitude(MJD0 + (hour + 1.0) / 24.0, location.longitude, cosLatitude, sinLatitude) - sinRefractionAngle
+            // Инициализация поиска
+            var y_minus = getSinAltitude(MJD0 + (hour - 1.0) / 24.0, location.longitude, cosLatitude, sinLatitude) - sinRefractionAngle
 
-            // определние параболы по трем значением y_minus,y_0,y_plus
-            val quadraticResult = QuadraticInterpolator.getResult(y_minus, y_0, y_plus)
+            var rise: Result.Rise? = null
+            var set: Result.Set? = null
 
-            when (quadraticResult) {
-                is QuadraticInterpolator.Result.Root -> {
-                    if (y_minus < 0.0)
-                        rise = Result.Rise(Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(hour + quadraticResult.root) })
-                    else
-                        set = Result.Set(Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(hour + quadraticResult.root) })
+            // перебор интервалов [0h-2h] to [22h-24h]
+            do {
+                val defferedY_0 = async(CommonPool) { getSinAltitude(MJD0 + hour / 24.0, location.longitude, cosLatitude, sinLatitude) - sinRefractionAngle }
+                val defferedY_plus = async(CommonPool) { getSinAltitude(MJD0 + (hour + 1.0) / 24.0, location.longitude, cosLatitude, sinLatitude) - sinRefractionAngle }
+
+                y_0 = defferedY_0.await()
+                y_plus = defferedY_plus.await()
+
+                // определние параболы по трем значением y_minus,y_0,y_plus
+                val quadraticResult = QuadraticInterpolator.getResult(y_minus, y_0, y_plus)
+
+                when (quadraticResult) {
+                    is QuadraticInterpolator.Result.Root -> {
+                        if (y_minus < 0.0)
+                            rise = Result.Rise(Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(hour + quadraticResult.root) })
+                        else
+                            set = Result.Set(Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(hour + quadraticResult.root) })
+                    }
+                    is QuadraticInterpolator.Result.Roots -> {
+                        val (LT_Rise, LT_Set) = if (quadraticResult.extremum.y < 0.0)
+                            Pair(hour + quadraticResult.root2, hour + quadraticResult.root1) else
+                            Pair(hour + quadraticResult.root1, hour + quadraticResult.root2)
+                        return@runBlocking Result.RiseSet(
+                                Result.Rise(Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(LT_Rise) }),
+                                Result.Set(Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(LT_Set) }))
+                    }
                 }
-                is QuadraticInterpolator.Result.Roots -> {
-                    val (LT_Rise, LT_Set) = if (quadraticResult.extremum.y < 0.0)
-                        Pair(hour + quadraticResult.root2, hour + quadraticResult.root1) else
-                        Pair(hour + quadraticResult.root1, hour + quadraticResult.root2)
-                    return Result.RiseSet(
-                            Result.Rise(Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(LT_Rise) }),
-                            Result.Set(Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(LT_Set) }))
-                }
-            }
 
-            y_minus = y_plus // подготовка к обработке следующего интервала
-            hour += 2.0
-        } while (!((hour == 25.0) || (rise != null && set != null)))
-        if (rise != null && set != null) return Result.RiseSet(rise, set)
-        if (rise != null) return rise
-        if (set != null) return set
-        return Result.None(y_minus > 0.0)
+                y_minus = y_plus // подготовка к обработке следующего интервала
+                hour += 2.0
+            } while (!((hour == 25.0) || (rise != null && set != null)))
+            if (rise != null && set != null) return@runBlocking Result.RiseSet(rise, set)
+            if (rise != null) return@runBlocking rise
+            if (set != null) return@runBlocking set
+            return@runBlocking Result.None(y_minus > 0.0)
+        }
     }
 
 }

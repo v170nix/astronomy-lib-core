@@ -1,12 +1,12 @@
 buildscript {
-    ext.kotlin_version = '1.1.1'
+    ext.kotlin_version = '1.1.2'
 
     repositories {
         mavenCentral()
         jcenter()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.2-2"
     }
 }
 
@@ -18,7 +18,7 @@ apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 
 group 'net.arwix.astronomy'
-version '0.75'
+version '0.80'
 
 bintray {
     user = 'v170nix'
@@ -52,12 +52,20 @@ publishing {
 
 repositories {
     mavenCentral()
+    maven { url "https://kotlin.bintray.com/kotlinx/" }
+    jcenter()
 }
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-runtime', version: '1.1.1'
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.15'
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-runtime', version: '1.1.2'
     testCompile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     testCompile "junit:junit:4.12"
 //    testCompile "net.arwix.astronomy:astronomy-vsop87-c:0.66"
+}
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
 }

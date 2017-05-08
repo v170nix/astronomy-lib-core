@@ -16,6 +16,10 @@
 
 package net.arwix.astronomy.math
 
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.runBlocking
+
 /**
  * @param f        функция реализующа интерфейс [Function]
  * @param a        начальная точка отразка
@@ -34,7 +38,7 @@ class SearchExtremumGoldenMethod(private val a: Double, private val b: Double, p
     val min: Double by lazy { doMin(a, b) }
     val max: Double by lazy { doMax(a, b) }
 
-    private fun doMax(a: Double, b: Double): Double {
+    private fun doMax(a: Double, b: Double): Double = runBlocking {
         var a = a
         var b = b
         var step = 0
@@ -43,18 +47,18 @@ class SearchExtremumGoldenMethod(private val a: Double, private val b: Double, p
             val d = (b - a) / GOLDEN_RATIO
             val x1 = b - d
             val x2 = a + d
-            val y1 = function(x1)
-            val y2 = function(x2)
-            if (y1 <= y2) {
+            val y1 = async(CommonPool) { function(x1) }
+            val y2 = async(CommonPool) { function(x2) }
+            if (y1.await() <= y2.await()) {
                 a = x1
             } else {
                 b = x2
             }
-        } while (Math.abs(a - b) > this.e && step < maxSteps)
-        return (a + b) / 2.0
+        } while (Math.abs(a - b) > e && step < maxSteps)
+        return@runBlocking (a + b) / 2.0
     }
 
-    private fun doMin(a: Double, b: Double): Double {
+    private fun doMin(a: Double, b: Double): Double = runBlocking {
         var a = a
         var b = b
         var step = 0
@@ -63,16 +67,15 @@ class SearchExtremumGoldenMethod(private val a: Double, private val b: Double, p
             val d = (b - a) / GOLDEN_RATIO
             val x1 = b - d
             val x2 = a + d
-            val y1 = function(x1)
-            val y2 = function(x2)
-            if (y1 >= y2) {
+            val y1 = async(CommonPool) { function(x1) }
+            val y2 = async(CommonPool) { function(x2) }
+            if (y1.await() >= y2.await()) {
                 a = x1
             } else {
                 b = x2
             }
-        } while (Math.abs(a - b) > this.e && step < maxSteps)
-        return (a + b) / 2.0
+        } while (Math.abs(a - b) > e && step < maxSteps)
+        return@runBlocking (a + b) / 2.0
     }
-
 
 }
