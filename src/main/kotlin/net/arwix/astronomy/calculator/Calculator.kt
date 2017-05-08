@@ -45,10 +45,10 @@ abstract class Calculator<T> {
     protected var isValidResult = false
 
 
-    constructor(date: Calendar, location: Location, getGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector) {
+    constructor(date: Calendar, location: Location, funGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector) {
         this.date = date
         this.location = location
-        this.getCoordinates = getGeocentricEquatorialCoordinates;
+        this.getCoordinates = funGeocentricEquatorialCoordinates;
     }
 
     /**

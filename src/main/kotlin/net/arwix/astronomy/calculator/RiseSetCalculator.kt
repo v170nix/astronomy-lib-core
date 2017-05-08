@@ -52,13 +52,13 @@ class RiseSetCalculator : Calculator<RiseSetCalculator.Result> {
         internal val sinRefractionAngle = sin(toRadians(angle))
     }
 
-    constructor (date: Calendar, location: Location, getGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector, type: ObjectType) :
-            super(date, location, getGeocentricEquatorialCoordinates) {
+    constructor (date: Calendar, location: Location, funGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector, type: ObjectType) :
+            super(date, location, funGeocentricEquatorialCoordinates) {
         this.sinRefractionAngle = type.sinRefractionAngle
     }
 
-    internal constructor (date: Calendar, location: Location, getGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector, sinRefractionAngle: Double) :
-            super(date, location, getGeocentricEquatorialCoordinates) {
+    internal constructor (date: Calendar, location: Location, funGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector, sinRefractionAngle: Double) :
+            super(date, location, funGeocentricEquatorialCoordinates) {
         this.sinRefractionAngle = sinRefractionAngle
     }
 
@@ -71,7 +71,7 @@ class RiseSetCalculator : Calculator<RiseSetCalculator.Result> {
      */
     override fun calls(): Result {
         isValidResult = false
-        val innerDate = Calendar.getInstance(date.timeZone).apply { this.time = date.time }
+        val innerDate = Calendar.getInstance(date.timeZone).apply { this.timeInMillis = date.timeInMillis }
         deltaT = innerDate.getDeltaT(TimeUnit.DAYS)
         // latitude = 65.5;
         // 27.05.2012

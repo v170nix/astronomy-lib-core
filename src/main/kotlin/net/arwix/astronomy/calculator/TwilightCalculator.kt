@@ -23,8 +23,8 @@ import java.lang.Math.sin
 import java.lang.Math.toRadians
 import java.util.*
 
-class TwilightCalculator(date: Calendar, location: Location, getGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector, type: TwilightType) :
-        Calculator<TwilightCalculator.TwilightResult>(date, location, getGeocentricEquatorialCoordinates) {
+class TwilightCalculator(date: Calendar, location: Location, funGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector, type: TwilightType) :
+        Calculator<TwilightCalculator.TwilightResult>(date, location, funGeocentricEquatorialCoordinates) {
 
     sealed class TwilightResult(open val type: TwilightType) {
         data class Begin(override val type: TwilightType, val calendar: Calendar) : TwilightResult(type)

@@ -18,6 +18,7 @@ package net.arwix.astronomy.core
 
 import net.arwix.astronomy.core.calendar.getJT
 import net.arwix.astronomy.core.vector.Matrix
+import net.arwix.astronomy.testing.NutationMatrix
 import org.junit.Assert.assertArrayEquals
 import org.junit.Before
 import org.junit.Test
@@ -90,6 +91,7 @@ class AstronomyMatrixTest {
 
     @Test
     fun createNutation() {
+//        val t = 0.4779055751655893
         val def = arrayOf(
                 doubleArrayOf(0.9999999995457635, -2.765412347493946E-5, -1.1988433012695878E-5),
                 doubleArrayOf(2.7654600894686653E-5, 0.9999999988245951, 3.982502882166061E-5),
@@ -99,6 +101,7 @@ class AstronomyMatrixTest {
         assertArrayEquals("not equal", def[0], m[0], 1E-14)
         assertArrayEquals("not equal", def[1], m[1], 1E-14)
         assertArrayEquals("not equal", def[2], m[2], 1E-14)
+        NutationMatrix.getNutationAngles(t)
     }
 
     private fun printMatrix(m: Matrix) {

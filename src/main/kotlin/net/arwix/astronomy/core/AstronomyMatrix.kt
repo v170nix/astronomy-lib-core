@@ -67,9 +67,10 @@ object AstronomyMatrix {
             val zeta: Double
             val z: Double
             val theta: Double
-            zeta = (2306.2181 + (1.39656 - 0.000139 * T1) * T1 + (0.30188 - 0.000344 * T1 + 0.017998 * dT) * dT) * dT / ARCS
-            z = zeta + (0.79280 + 0.000411 * T1 + 0.000205 * dT) * dT * dT / ARCS
-            theta = (2004.3109 - (0.85330 + 0.000217 * T1) * T1 - (0.42665 + 0.000217 * T1 + 0.041833 * dT) * dT) * dT / ARCS
+            zeta = ((2306.2181 + (1.39656 - 0.000139 * T1) * T1 + ((0.30188 - 0.000344 * T1) + 0.017998 * dT) * dT) * dT) / ARCS
+            //   zeta = (2306.2181 + (1.39656 - 0.000139 * T1) * T1 + (0.30188 - 0.000344 * T1 + 0.017998 * dT) * dT) * dT / ARCS
+            z = zeta + ((0.79280 + 0.000411 * T1) + 0.000205 * dT) * dT * dT / ARCS
+            theta = ((2004.3109 - (0.85330 + 0.000217 * T1) * T1) - ((0.42665 + 0.000217 * T1) + 0.041833 * dT) * dT) * dT / ARCS
             Matrix(Matrix.Axis.Z, -z) * Matrix(Matrix.Axis.Y, theta) * Matrix(Matrix.Axis.Z, -zeta)
         }
     }
@@ -86,8 +87,12 @@ object AstronomyMatrix {
         val F: Double = PI2 * frac(0.259089 + 1342.227826 * T)
         val N: Double = PI2 * frac(0.347346 - 5.372447 * T)
         val eps: Double = 0.4090928 - 2.2696E-4 * T
+        //ε = 23° 26′ 21.448″ − 4680.93″ t − 1.55″ t2 + 1999.25″ t3 − 51.38″ t4 − 249.67″ t5 − 39.05″ t6 + 7.12″ t7 + 27.87″ t8 + 5.79″ t9 + 2.45″ t10
+
         val dpsi = (-17.200 * Math.sin(N) - 1.319 * Math.sin(2 * (F - D + N)) - 0.227 * Math.sin(2 * (F + N)) + 0.206 * Math.sin(2 * N) + 0.143 * Math.sin(ls)) / ARCS
         val deps = (+9.203 * Math.cos(N) + 0.574 * Math.cos(2 * (F - D + N)) + 0.098 * Math.cos(2 * (F + N)) - 0.090 * Math.cos(2 * N)) / ARCS
+        System.out.println("psi" + dpsi)
+        System.out.println("deps" + deps)
         return Matrix(Matrix.Axis.X, -eps - deps) * Matrix(Matrix.Axis.Z, -dpsi) * Matrix(Matrix.Axis.X, eps)
     }
 

@@ -1,2 +1,0 @@
-Manifest-Version: 1.0
-Class-Path: kotlin-runtime-1.1.0.jar kotlin-stdlib-1.1.0.jar

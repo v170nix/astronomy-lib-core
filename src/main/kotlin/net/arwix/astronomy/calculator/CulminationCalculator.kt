@@ -29,9 +29,14 @@ import java.lang.Math.sin
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-
-class CulminationCalculator(date: Calendar, location: Location, getGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector) :
-        Calculator<CulminationCalculator.CulminationResult>(date, location, getGeocentricEquatorialCoordinates) {
+/**
+ * @param date дата расчета дня
+ * @param location долгота и широта в радианах
+ * @param funGeocentricEquatorialCoordinates получение геоцентрических экваториальных координат
+ * @param precision точность в долях часа
+ */
+class CulminationCalculator(date: Calendar, location: Location, funGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector, private val precision: Double) :
+        Calculator<CulminationCalculator.CulminationResult>(date, location, funGeocentricEquatorialCoordinates) {
 
     sealed class CulminationResult {
         data class Upper(val isAbove: Boolean, val calendar: Calendar) : CulminationResult()
@@ -41,13 +46,13 @@ class CulminationCalculator(date: Calendar, location: Location, getGeocentricEqu
 
 
     override fun calls(): CulminationResult {
-        val innerDate = Calendar.getInstance(date.timeZone).apply { this.time = date.time }
+        val innerDate = Calendar.getInstance(date.timeZone).apply { this.timeInMillis = date.timeInMillis }
         deltaT = innerDate.getDeltaT(TimeUnit.DAYS)
         innerDate.resetTime()
         val MJD0 = innerDate.getMJD()
         val cosLatitude = cos(location.latitude)
         val sinLatitude = sin(location.latitude)
-        return SearchExtremumGoldenMethod(0.0, 24.0, Math.ulp(100.0), 50,
+        return SearchExtremumGoldenMethod(0.0, 24.0, precision, 50,
                 { x -> getSinAltitude(MJD0 + x / 24.0, location.longitude, cosLatitude, sinLatitude) })
                 .let {
                     val upperTime = Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(it.max) }
