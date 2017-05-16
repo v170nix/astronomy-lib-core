@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package net.arwix.astronomy.core.coordinates
+package net.arwix.astronomy.annotation
 
-import net.arwix.astronomy.core.vector.SphericalVector
-import net.arwix.astronomy.core.vector.Vector
-import net.arwix.astronomy.math.radians.Radian
+@Retention(AnnotationRetention.BINARY)
+annotation class Geocentric
 
-/**
- * @longitude in radians
- * @latitude in radians
- */
-data class Location(val longitude: Radian, val latitude: Radian) {
-    fun toVector(radius: Double = 1.0): Vector = SphericalVector(longitude, latitude, radius)
-}
+@Retention(AnnotationRetention.BINARY)
+annotation class Heliocentric
+
+@Retention(AnnotationRetention.BINARY)
+annotation class Ecliptic
+
+@Retention(AnnotationRetention.BINARY)
+annotation class Equatorial

@@ -17,6 +17,21 @@
 package net.arwix.astronomy.calculator
 
 //import net.arwix.astronomy.vsop87.CEarthData
+import net.arwix.astronomy.annotation.Ecliptic
+import net.arwix.astronomy.annotation.Geocentric
+import net.arwix.astronomy.annotation.Heliocentric
+import net.arwix.astronomy.core.C_Light
+import net.arwix.astronomy.core.DEG
+import net.arwix.astronomy.core.Position
+import net.arwix.astronomy.core.T_J2000
+import net.arwix.astronomy.core.calendar.getJT
+import net.arwix.astronomy.core.kepler.KeplerianOrbit
+import net.arwix.astronomy.core.vector.*
+import net.arwix.astronomy.core.vector.Vector
+import net.arwix.astronomy.ephem.Nutation
+import net.arwix.astronomy.ephem.Obliquity
+import net.arwix.astronomy.ephem.Precession
+import net.arwix.astronomy.vsop87.*
 import org.junit.Test
 import java.util.*
 
@@ -24,12 +39,64 @@ import java.util.*
 class RiseSetCalculatorTest {
     @Test
     fun calls() {
-//        val date = Calendar.getInstance(TimeZone.getTimeZone("GMT+4"));
-//        date.set(Calendar.YEAR, 2014);
-//        date.set(Calendar.MONTH, 8);
-//        date.set(Calendar.DAY_OF_MONTH, 14);
-//        date.set(Calendar.HOUR_OF_DAY, 20);
-//        val location = Location(Math.toRadians(30.3290233), Math.toRadians(59.909328));
+        val calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
+        calendar.set(Calendar.YEAR, 2014)
+        calendar.set(Calendar.MONTH, 8)
+        calendar.set(Calendar.DAY_OF_MONTH, 17)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val t = calendar.getJT(true)
+
+        // J2000
+        val positionA = Position(AEarthData() as VsopData)
+        @Heliocentric @Ecliptic var earthEcliptic = (AEarthData() as VsopData).getEclipticCoordinates(t)
+        @Heliocentric @Ecliptic var objEcliptic = (AMercuryData() as VsopData).getEclipticCoordinates(t)
+        @Geocentric @Ecliptic var objGeoEcliptic = objEcliptic - earthEcliptic
+        val dT = objGeoEcliptic.normalize() / C_Light / 36525.0
+        objEcliptic = (AMercuryData() as VsopData).getEclipticCoordinates(t - dT)
+        objGeoEcliptic = objEcliptic - earthEcliptic
+
+        val lightTime = dT * 36525.0
+
+
+        val orbit = KeplerianOrbit.Planet.MERCURY.getOrbitalPlane(t)
+        val eOrbit = KeplerianOrbit.Planet.EARTH.getOrbitalPlane(t)
+
+        //     objGeoEcliptic = objGeoEcliptic - (orbit.velocity - eOrbit.velocity).times(dT * 36525.0)
+
+        objGeoEcliptic = aberration(objGeoEcliptic, eOrbit.velocity as RectangularVector, lightTime)
+
+        //eclipticToEquatorial
+        val epsilon = Obliquity.meanObliquity(T_J2000)
+        val m = Matrix.transpose(Matrix(Matrix.Axis.X, epsilon))
+        var vectorAltA = m * objGeoEcliptic
+
+        vectorAltA = Precession.precessFromJ2000(t, vectorAltA)
+        vectorAltA = Nutation.nutateInEquatorialCoordinates(t, false, vectorAltA, true)
+
+        System.out.println("e= " + epsilon.toString())
+        System.out.println("Alt J2000 " + printLong(vectorAltA))
+        System.out.println("Alt J2000 " + printLat(vectorAltA))
+
+
+        var vectorA = positionA.getGeocentricEquatorialPosition(t, AMercuryData() as VsopData)
+        vectorA = Precession.precessFromJ2000(t, vectorA)
+        System.out.println(printLong(vectorA))
+        System.out.println(printLat(vectorA))
+
+        // Apparent
+        val eD: VsopData = CEarthData()
+        val position = Position(eD)
+        val vector = position.getGeocentricEquatorialPosition(t, CMercuryData() as VsopData)
+        System.out.println(printLong(vector))
+        System.out.println(printLat(vector))
+
+
+
+
+
 //
 //        val c = RiseSetCalculator(date, location, { t: Double, e: Epoch ->
 //
@@ -66,5 +133,54 @@ class RiseSetCalculatorTest {
         System.out.println("EVENTS - " +
                 calendar.apply { this.timeInMillis = tMill }.time.toString() + "; ")
 
+    }
+
+    fun aberration(pObject: RectangularVector, vearth: RectangularVector, light_time: Double): RectangularVector {
+        if (light_time <= 0) return pObject
+
+        //    val vearth = doubleArrayOf(earth[3], earth[4], earth[5])
+        val p = DoubleArray(3)
+
+        val TL = light_time
+        val P1MAG = TL * C_Light
+        val VEMAG = vearth.normalize()
+        if (VEMAG == 0.0) return pObject
+        val BETA = VEMAG / C_Light
+        val DOT = pObject[0] * vearth.x + pObject[1] * vearth.y + pObject[2] * vearth.z
+        val COSD = DOT / (P1MAG * VEMAG)
+        val GAMMAI = Math.sqrt(1.0 - BETA * BETA)
+        val P = BETA * COSD
+        val Q = (1.0 + P / (1.0 + GAMMAI)) * TL
+        val R = 1.0 + P
+
+        for (i in 0..2) {
+            p[i] = (GAMMAI * pObject[i] + Q * vearth[i]) / R
+        }
+
+        return RectangularVector(p[0], p[1], p[2])
+    }
+
+
+    private fun printLong(p: Vector): String {
+        val vector = p.getVectorOfType(VectorType.SPHERICAL) as SphericalVector
+
+        val hours = DEG * vector.phi / 15.0
+
+        val hour = hours.toInt()
+        val minutes = (hours - hour) * 60.0
+        val minute = minutes.toInt()
+        val seconds = (minutes - minute) * 60.0
+
+        return String.format(Locale.ENGLISH, "%1$02d:%2$02d:%3$.2f", hour, minute, seconds)
+    }
+
+    private fun printLat(p: Vector): String {
+        val vector = p.getVectorOfType(VectorType.SPHERICAL) as SphericalVector
+
+        val g = Math.toDegrees(vector.theta).toInt()
+        val mm = (Math.toDegrees(vector.theta) - g) * 60.0
+        val m = mm.toInt()
+        val s = (mm - m) * 60.0
+        return String.format(Locale.ENGLISH, "%1$02d %2$02d %3$.1f", g, Math.abs(m), Math.abs(s))
     }
 }

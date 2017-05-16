@@ -1,5 +1,0 @@
-Manifest-Version: 1.0
-Class-Path: kotlin-runtime-1.1.2.jar kotlin-stdlib-1.1.2.jar annotatio
- ns-13.0.jar
-Main-Class: 
-
