@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.arwix.astronomy.ephem
+package net.arwix.astronomy.ephemeris
 
 import net.arwix.astronomy.core.ARCSEC_TO_RAD
 import net.arwix.astronomy.core.DEG_TO_RAD
@@ -104,7 +104,7 @@ object Nutation {
     fun nutateInEquatorialCoordinates(t: Double, isFastCals: Boolean,
                                       inVector: Vector, meanToTrue: Boolean): Vector {
 
-        val nut = if (!isFastCals || t > 1) Nutation.calcNutation(t) else getFastNutation(t)
+        val nut = if (!isFastCals || t > 1) calcNutation(t) else getFastNutation(t)
         val oblm = Obliquity.meanObliquity(t)
         val oblt = oblm + nut[1]
         val dpsi = nut[0]

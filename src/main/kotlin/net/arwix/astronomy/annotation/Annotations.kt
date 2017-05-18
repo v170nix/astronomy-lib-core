@@ -16,14 +16,14 @@
 
 package net.arwix.astronomy.annotation
 
-@Retention(AnnotationRetention.BINARY)
+@Retention(AnnotationRetention.RUNTIME)
 annotation class Geocentric
 
-@Retention(AnnotationRetention.BINARY)
+@Retention(AnnotationRetention.RUNTIME)
 annotation class Heliocentric
 
-@Retention(AnnotationRetention.BINARY)
+@Retention(AnnotationRetention.RUNTIME)
 annotation class Ecliptic
 
-@Retention(AnnotationRetention.BINARY)
+@Retention(AnnotationRetention.RUNTIME)
 annotation class Equatorial

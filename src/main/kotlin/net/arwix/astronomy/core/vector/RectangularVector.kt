@@ -18,13 +18,11 @@ package net.arwix.astronomy.core.vector
 
 class RectangularVector(@JvmField var x: Double, @JvmField var y: Double, @JvmField var z: Double): Vector() {
 
-
     constructor(array: DoubleArray) : this(array[0], array[1], array[2])
     constructor(): this(0.0, 0.0, 0.0)
     constructor(vector: Vector): this() {
         set(vector)
     }
-
 
     override fun getType() = VectorType.RECTANGULAR
 
@@ -56,5 +54,11 @@ class RectangularVector(@JvmField var x: Double, @JvmField var y: Double, @JvmFi
         2 -> z
         else -> throw IndexOutOfBoundsException()
     }
+
+    override fun component1() = x
+
+    override fun component2() = y
+
+    override fun component3() = z
 
 }

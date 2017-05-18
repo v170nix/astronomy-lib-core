@@ -136,6 +136,8 @@ class Matrix() {
 
     fun toArray() = elements.copyOf()
 
+    fun transpose() = Companion.transpose(this)
+
     operator fun times(right: Matrix) = Companion.times(this, right)
 
     operator fun times(right: Vector) = Companion.timesMV(this, right)

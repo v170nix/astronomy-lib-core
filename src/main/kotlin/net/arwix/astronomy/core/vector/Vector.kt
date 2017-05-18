@@ -201,5 +201,11 @@ abstract class Vector {
         set(this / scalar)
     }
 
+    abstract operator fun component1(): Double
+
+    abstract operator fun component2(): Double
+
+    abstract operator fun component3(): Double
+
 }
 

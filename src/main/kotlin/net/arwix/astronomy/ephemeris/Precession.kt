@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.arwix.astronomy.ephem
+package net.arwix.astronomy.ephemeris
 
 import net.arwix.astronomy.core.ARCSEC_TO_RAD
 import net.arwix.astronomy.core.PI2
@@ -223,11 +223,8 @@ object Precession {
     /**
      * Precess rectangular equatorial coordinates from J2000 epoch.
      *
-     * @param JD Equinox of the output in Julian day (TT).
      * @param R Array with x, y, z.
-     * @param eph Ephemeris properties.
      * @return Array with corrected x, y, z.
-     * @throws JPARSECException If an error occurs.
      */
     fun precessFromJ2000(T: Double, R: Vector): Vector {
         //      return precessionVondrak2011(T, R, true)

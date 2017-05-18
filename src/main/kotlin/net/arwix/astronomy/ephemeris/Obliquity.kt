@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-package net.arwix.astronomy.ephem
+package net.arwix.astronomy.ephemeris
 
 import net.arwix.astronomy.core.ARCSEC_TO_RAD
 import net.arwix.astronomy.core.MINUTES_PER_DEGREE
 import net.arwix.astronomy.core.PI2
 import net.arwix.astronomy.core.SECONDS_PER_DEGREE
+import net.arwix.astronomy.ephemeris.precession.PrecessionMethod
 import java.lang.Math.cos
 import java.lang.Math.sin
 
 
 object Obliquity {
-
-    enum class METHOD {WILLIAMS_1994, JPL_DE4xx, SIMON_1994, LASKAR_1986, IAU_1976 }
-
-    private val REDUCTION_METHOD_IAU_2006 = true
-    private val REDUCTION_METHOD_IAU_2009 = true
-    private val useVondrak2011PrecessionFormulaInsteadOfIAU2006 = true
-
 
     private val xypol = doubleArrayOf(84028.206305, 0.3624445, -0.00004039, -110E-9)
 
@@ -79,7 +73,7 @@ object Obliquity {
      *          the Vondrak formulae validity is t between +/- 2000.
      * @return The mean obliquity (epsilon sub 0) in radians.
      */
-    fun meanObliquity(t: Double, method: METHOD? = null): Double {
+    fun meanObliquity(t: Double, method: PrecessionMethod = PrecessionMethod.VONDRAK_2011): Double {
 
         // The obliquity formula come from Meeus, Astro Algorithms, 2ed.
         var rval = 0.0
@@ -115,15 +109,15 @@ object Obliquity {
 
         // Select the desired formula
         val (rvalStart, coeffs) = when (method) {
-            METHOD.WILLIAMS_1994, METHOD.JPL_DE4xx -> Pair(rvalStart_WIL, coeffs_WIL)
-            METHOD.SIMON_1994 -> Pair(rvalStart_SIM, coeffs_SIM)
-            METHOD.LASKAR_1986 -> Pair(rvalStart_LAS, coeffs_LAS)
-            METHOD.IAU_1976 -> Pair(rvalStart_IAU, coeffs_IAU)
+            PrecessionMethod.WILLIAMS_1994, PrecessionMethod.JPL_DE4xx -> Pair(rvalStart_WIL, coeffs_WIL)
+            PrecessionMethod.SIMON_1994 -> Pair(rvalStart_SIM, coeffs_SIM)
+            PrecessionMethod.LASKAR_1986 -> Pair(rvalStart_LAS, coeffs_LAS)
+            PrecessionMethod.IAU_1976 -> Pair(rvalStart_IAU, coeffs_IAU)
             else -> Pair(rvalStart_CAP, coeffs_CAP)
         }
 
 
-        if (Math.abs(t) > 100 || (REDUCTION_METHOD_IAU_2006 || REDUCTION_METHOD_IAU_2009) && useVondrak2011PrecessionFormulaInsteadOfIAU2006) {
+        if (Math.abs(t) > 100 || method == PrecessionMethod.VONDRAK_2011) {
             var y = 0.0
             var w = PI2 * t
 

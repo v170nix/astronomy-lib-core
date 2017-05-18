@@ -57,6 +57,11 @@ class SphericalVector(@JvmField var phi: Double, @JvmField var theta: Double, @J
             else -> throw IndexOutOfBoundsException()
         }
 
+    override fun component1() = phi
+
+    override fun component2() = theta
+
+    override fun component3() = r
 
 
 }

@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package net.arwix.astronomy.ephem
+package net.arwix.astronomy.ephemeris
 
 import net.arwix.astronomy.core.MJD_J2000
 import net.arwix.astronomy.core.calendar.getJT
 import net.arwix.astronomy.core.vector.Matrix
 import net.arwix.astronomy.core.vector.RectangularVector
+import net.arwix.astronomy.ephem.Precession
 import org.junit.Before
 import org.junit.Test
 
