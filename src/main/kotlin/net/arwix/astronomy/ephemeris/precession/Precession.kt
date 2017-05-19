@@ -130,6 +130,32 @@ sealed class Precession(val t: Double) : PrecessionTransformation {
      */
     @Ecliptic class IAU_1976(t: Double) : Precession(t), PrecessionTransformation by Impl(getEclipticMatrix(IAU_1976_Matrices, t))
 
+
+    fun getNearestObliquity() =
+            when (this) {
+                is Precession.VONDRAK_2011 -> Obliquity.VONDRAK_2011(t)
+                is Precession.IAU_2009,
+                is Precession.IAU_2006,
+                is Precession.IAU_2000 -> Obliquity.IAU_2006(t)
+                is Precession.WILLIAMS_1994,
+                is Precession.JPL_DE4xx -> Obliquity.WILLIAMS_1994(t)
+                is Precession.SIMON_1994 -> Obliquity.SIMON_1994(t)
+                is Precession.LASKAR_1986 -> Obliquity.LASKAR_1996(t)
+                is Precession.IAU_1976 -> Obliquity.IAU_1976(t)
+
+            }
+
+    fun getNearsetNutation() = when (this) {
+        is Precession.IAU_2009,
+        is Precession.IAU_2006 -> Nutation.IAU_2006(t)
+        is Precession.WILLIAMS_1994,
+        is Precession.JPL_DE4xx,
+        is Precession.SIMON_1994,
+        is Precession.LASKAR_1986,
+        is Precession.IAU_1976 -> Nutation.IAU_1980(t)
+        else -> Nutation.IAU_2000(t)
+    }
+
 }
 
 interface PrecessionTransformation {

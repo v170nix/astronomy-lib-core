@@ -20,7 +20,6 @@ import net.arwix.astronomy.core.ARCSEC_TO_RAD
 import net.arwix.astronomy.core.MINUTES_PER_DEGREE
 import net.arwix.astronomy.core.PI2
 import net.arwix.astronomy.core.SECONDS_PER_DEGREE
-import net.arwix.astronomy.ephemeris.precession.PrecessionMethod
 import java.lang.Math.cos
 import java.lang.Math.sin
 
@@ -73,7 +72,7 @@ object Obliquity {
      *          the Vondrak formulae validity is t between +/- 2000.
      * @return The mean obliquity (epsilon sub 0) in radians.
      */
-    fun meanObliquity(t: Double, method: PrecessionMethod = PrecessionMethod.VONDRAK_2011): Double {
+    fun meanObliquity(t: Double): Double {
 
         // The obliquity formula come from Meeus, Astro Algorithms, 2ed.
         var rval = 0.0
@@ -108,16 +107,16 @@ object Obliquity {
         val coeffs_IAU = doubleArrayOf(-468150.0, -590.0, 181300.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
         // Select the desired formula
-        val (rvalStart, coeffs) = when (method) {
-            PrecessionMethod.WILLIAMS_1994, PrecessionMethod.JPL_DE4xx -> Pair(rvalStart_WIL, coeffs_WIL)
-            PrecessionMethod.SIMON_1994 -> Pair(rvalStart_SIM, coeffs_SIM)
-            PrecessionMethod.LASKAR_1986 -> Pair(rvalStart_LAS, coeffs_LAS)
-            PrecessionMethod.IAU_1976 -> Pair(rvalStart_IAU, coeffs_IAU)
-            else -> Pair(rvalStart_CAP, coeffs_CAP)
-        }
+//        val (rvalStart, coeffs) = when (method) {
+//            PrecessionMethod.WILLIAMS_1994, PrecessionMethod.JPL_DE4xx -> Pair(rvalStart_WIL, coeffs_WIL)
+//            PrecessionMethod.SIMON_1994 -> Pair(rvalStart_SIM, coeffs_SIM)
+//            PrecessionMethod.LASKAR_1986 -> Pair(rvalStart_LAS, coeffs_LAS)
+//            PrecessionMethod.IAU_1976 -> Pair(rvalStart_IAU, coeffs_IAU)
+        val (rvalStart, coeffs) = Pair(rvalStart_CAP, coeffs_CAP)
+//        }
 
 
-        if (Math.abs(t) > 100 || method == PrecessionMethod.VONDRAK_2011) {
+//        if (Math.abs(t) > 100 || method == PrecessionMethod.VONDRAK_2011) {
             var y = 0.0
             var w = PI2 * t
 
@@ -134,21 +133,21 @@ object Obliquity {
             rval = y * ARCSEC_TO_RAD
 
             if (Math.abs(t) > 100) TODO("Date is too far from J2000, obliquity forced to Vondrk et al. 2011 model.")
-        } else {
-            u0 = t / 100.0
-            u = u0 // u is in julian 10000's of years
-            rval = rvalStart
-
-            for (i in 0..OBLIQ_COEFFS - 1) {
-                rval += u * coeffs[i] / 100.0
-                u *= u0
-            }
-
-            // convert from seconds to radians
-            rval *= ARCSEC_TO_RAD
-
-            if (Math.abs(t) > 100.0) TODO("This date is too far from J2000 epoch. Obliquity is probably incorrect.")
-        }
+//        } else {
+//            u0 = t / 100.0
+//            u = u0 // u is in julian 10000's of years
+//            rval = rvalStart
+//
+//            for (i in 0..OBLIQ_COEFFS - 1) {
+//                rval += u * coeffs[i] / 100.0
+//                u *= u0
+//            }
+//
+//            // convert from seconds to radians
+//            rval *= ARCSEC_TO_RAD
+//
+//            if (Math.abs(t) > 100.0) TODO("This date is too far from J2000 epoch. Obliquity is probably incorrect.")
+//        }
 
         return rval
     }

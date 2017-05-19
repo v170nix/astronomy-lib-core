@@ -14,329 +14,131 @@
  * limitations under the License.
  */
 
-package net.arwix.astronomy.ephemeris
+package net.arwix.astronomy.ephemeris.precession
 
 import net.arwix.astronomy.core.ARCSEC_TO_RAD
-import net.arwix.astronomy.core.DEG_TO_RAD
-import net.arwix.astronomy.core.vector.RectangularVector
-import net.arwix.astronomy.core.vector.Vector
-import net.arwix.astronomy.core.vector.VectorType
-import java.lang.Math.*
+import net.arwix.astronomy.math.polynomialSum
 
 
-object Nutation {
+/**
+ * Nutation, IAU 2000A model (MHB2000 luni-solar and planetary nutation with
+ * free core nutation omitted) plus optional support for free core nutation.
+ * This method is based on SOFA (Standards of Astronomy) software library.
+ * Results are set in fields [NutationRecult.nutationInLongitude] and
+ * [Nutation.nutationInObliquity].
+ * <P>
+ * The nutation components in longitude and obliquity are with respect to
+ * the equinox and ecliptic of date. The obliquity at J2000 is assumed to be
+ * the Lieske et al. (1977) value of 84381.448 arcsec.
+</P> * <P>
+ * Both the luni-solar and planetary nutations are included. The latter are
+ * due to direct planetary nutations and the perturbations of the lunar and
+ * terrestrial orbits.
+</P> * <P>
+ * The routine computes the MHB2000 nutation series with the associated
+ * corrections for planetary nutations. It is an implementation of the
+ * nutation part of the IAU 2000A precession- nutation model, formally
+ * adopted by the IAU General Assembly in 2000, namely MHB2000 (Mathews et
+ * al. 2002), but with the free core nutation (FCN) omitted.
+</P> * <P>
+ * The full MHB2000 model also contains contributions to the nutations in
+ * longitude and obliquity due to the free-excitation of the
+ * free-core-nutation during the period 1979-2000.
+ * (note this should always happen since this method is needed by
+ *
+ * With the FCN corrections included, the present
+ * routine delivers a pole which is at current epochs accurate to a few
+ * hundred microarcseconds. The omission of FCN introduces further errors of
+ * about that size.
+ *
+ * The present routine provides classical nutation. The MHB2000 algorithm,
+ * from which it is adapted, deals also with (i) the offsets between the
+ * GCRS and mean poles and (ii) the adjustments in longitude and obliquity
+ * due to the changed precession rates. These additional functions, namely
+ * frame bias and precession adjustments, are applied independently in this
+ * package. Bias correction is made automatically in this library when
+ * selecting ICRS frame. The precession adjustments are applied in the
+ * precession methods from Capitaine and IAU2000 models.
+ *
+ * References:
+ *
+ * Mathews, P.M., Herring, T.A., Buffet, B.A., "Modeling of nutation and
+ * precession New nutation series for nonrigid Earth and insights into the
+ * Earth's interior", J.Geophys.Res., 107, B4, 2002. The MHB2000 code itself
+ * was obtained on 9th September 2002 from <A target="_blank" href = "ftp://maia.usno.navy.mil/conv2000/chapter5/IAU2000A">
+ * ftp://maia.usno.navy.mil/conv2000/chapter5/IAU2000A</A>.
+ *
+ * Souchay, J., Loysel, B., Kinoshita, H., Folgueira, M., A&A Supp. Ser.
+ * 135, 111 (1999).
+ * Wallace, P.T., "Software for Implementing the IAU 2000 Resolutions", in
+ * IERS Workshop 5.1 (2002).
+ * Chapront, J., Chapront-Touze, M. & Francou, G., Astron.Astrophys., 387,
+ * 700 (2002).
+ * Lieske, J.H., Lederle, T., Fricke, W. & Morando, B., "Expressions for the
+ * precession quantities based upon the IAU (1976) System of Astronomical
+ * Constants", Astron.Astrophys., 58, 1-16 (1977).
+ * Simon, J.-L., Bretagnon, P., Chapront, J., Chapront-Touze, M., Francou,
+ * G., Laskar, J., A&A282, 663-683 (1994).
+ * This revision: 2005 August 24.
+ *
+ * Copyright (C) 2005 IAU SOFA Review Board.
+ *
+ * @param T Time in Julian centuries from J2000.
+ *
+ * @throws JPARSECException If an error occurs.
+</P> */
+internal fun calcNutation_IAU2000(T: Double): NutationResult {
+    // * Initialize the nutation values.
+    var DP = 0.0
+    var DE = 0.0
+    var nutationInLongitude: Double
+    var nutationInObliquity: Double
 
-    /**
-     * Array to hold sines of multiple angles
-     */
-    private val ss = Array(5) { DoubleArray(8) }
-
-    /**
-     * Array to hold cosines of multiple angles
-     */
-    private val cc = Array(5) { DoubleArray(8) }
-
-
-    /**
-     * Returns the nutation in longitude and obliquity following Petter Duffet's
-     * book Astronomy with your Personal Computer.
-     * @param jd Julian day in dynamical time.
-     * *
-     * @return Nutation in longitude and obliquity in radians.
-     */
-    fun getFastNutation(t: Double): DoubleArray {
-
-        var DP: Double
-        var DOSR: Double
-
-        val T2 = t * t
-        var aq = 100.0021358 * t
-        var b = 360.0 * (aq - floor(aq))
-        val L1 = 279.6967 + .000303 * T2 + b
-        val L2 = 2.0 * L1 * DEG_TO_RAD
-        aq = 1336.855231 * t
-        b = 360.0 * (aq - floor(aq))
-        val D1 = 270.4342 - .001133 * T2 + b
-        val D2 = 2.0 * D1 * DEG_TO_RAD
-        aq = 99.99736056 * t
-        b = 360.0 * (aq - floor(aq))
-        val M1 = (358.4758 - .00015 * T2 + b) * DEG_TO_RAD
-        aq = 1325.552359 * t
-        b = 360.0 * (aq - floor(aq))
-        val M2 = (296.1046 + .009192 * T2 + b) * DEG_TO_RAD
-        aq = 5.372616667 * t
-        b = 360.0 * (aq - floor(aq))
-        val N1 = (259.1833 + .002078 * T2 - b) * DEG_TO_RAD
-        val N2 = 2.0 * N1 // * Constant.DEG_TO_RAD // A bug in Peter Duffett's code !?
-
-        DP = (-17.2327 - .01737 * t) * sin(N1)
-        DP += (-1.2729 - .00013 * t) * sin(L2) + .2088 * sin(N2)
-        DP += -.2037 * sin(D2) + (.1261 - .00031 * t) * sin(M1)
-        DP += .0675 * sin(M2) - (.0497 - .00012 * t) * sin(L2 + M1)
-        DP += -.0342 * sin(D2 - N1) - .0261 * sin(D2 + M2)
-        DP += .0214 * sin(L2 - M1) - .0149 * sin(L2 - D2 + M2)
-        DP += .0124 * sin(L2 - N1) + .0114 * sin(D2 - M2)
-
-        DOSR = (9.21 + .00091 * t) * cos(N1)
-        DOSR += (.5522 - .00029 * t) * cos(L2) - .0904 * cos(N2)
-        DOSR += .0884 * cos(D2) + .0216 * cos(L2 + M1)
-        DOSR += .0183 * cos(D2 - N1) + .0113 * cos(D2 + M2)
-        DOSR += -.0093 * cos(L2 - M1) - .0066 * cos(L2 - N1)
-
-        DP *= ARCSEC_TO_RAD
-        DOSR *= ARCSEC_TO_RAD
-
-        return doubleArrayOf(DP, DOSR)
-    }
-
-    /**
-     * Nutates equatorial coordinates from mean dynamical equator and equinox of date to true
-     * equator and equinox, or the opposite. See AA Explanatory Supplement, page 114-115.
-     * For dates between 1900 and 2100 and the flag to prefer precision in the ephemeris
-     * object set to false, the approximate code by Peter Duffet for nutation is used.
-     * @param jd_tt Julian day in TT.
-     * @param eph Ephemeris properties.
-     * @param in Input equatorial coordinates.
-     * @param meanToTrue True to nutate from mean to true position, false for true to mean.
-     *
-     * @return Output equatorial coordinates.
-     */
-    fun nutateInEquatorialCoordinates(t: Double, isFastCals: Boolean,
-                                      inVector: Vector, meanToTrue: Boolean): Vector {
-
-        val nut = if (!isFastCals || t > 1) calcNutation(t) else getFastNutation(t)
-        val oblm = Obliquity.meanObliquity(t)
-        val oblt = oblm + nut[1]
-        val dpsi = nut[0]
-
-        val cobm = Math.cos(oblm)
-        val sobm = Math.sin(oblm)
-        val cobt = Math.cos(oblt)
-        val sobt = Math.sin(oblt)
-        val cpsi = Math.cos(dpsi)
-        val spsi = Math.sin(dpsi)
-
-        // Compute elements of nutation matrix
-        val xx = cpsi
-        val yx = -spsi * cobm
-        val zx = -spsi * sobm
-        val xy = spsi * cobt
-        val yy = cpsi * cobm * cobt + sobm * sobt
-        val zy = cpsi * sobm * cobt - cobm * sobt
-        val xz = spsi * sobt
-        val yz = cpsi * cobm * sobt - sobm * cobt
-        val zz = cpsi * sobm * sobt + cobm * cobt
-
-        val vector = inVector.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector
-
-        val out = DoubleArray(3)
-        if (meanToTrue) {
-            out[0] = xx * vector.x + yx * vector.y + zx * vector.z
-            out[1] = xy * vector.x + yy * vector.y + zy * vector.z
-            out[2] = xz * vector.x + yz * vector.y + zz * vector.z
-//            if (out.size == 6) {
-//                out[3] = xx * `in`[3] + yx * `in`[4] + zx * `in`[5]
-//                out[4] = xy * `in`[3] + yy * `in`[4] + zy * `in`[5]
-//                out[5] = xz * `in`[3] + yz * `in`[4] + zz * `in`[5]
-//            }
-        } else {
-            out[0] = xx * vector.x + xy * vector.y + xz * vector.z
-            out[1] = yx * vector.x + yy * vector.y + yz * vector.z
-            out[2] = zx * vector.x + zy * vector.y + zz * vector.z
-//            if (out.size == 6) {
-//                out[3] = xx * `in`[3] + yx * `in`[4] + zx * `in`[5]
-//                out[4] = xy * `in`[3] + yy * `in`[4] + zy * `in`[5]
-//                out[5] = xz * `in`[3] + yz * `in`[4] + zz * `in`[5]
-//            }
-        }
-
-        return RectangularVector(out)
-    }
-
-    /**
-     * Calculate nutation in longitude and obliquity. Results are saved in
-     * [DataBase], using as identifier 'Nutation' for the array
-     * containing the values.
-
-     * @param T Julian centuries from J2000 epoch in dynamical time.
-     * *
-     * @param eph Ephemeris properties including if EOP correction should be
-     * * applied and the ephem method selection: IAU2006/2009, IAU2000, or any other
-     * * (for IAU1980 nutation).
-     * *
-     * @return The two values calculated for nutation in longitude and in obliquity.
-     * *
-     * @throws JPARSECException If an error occurs accesing EOP files when required.
-     */
-    fun calcNutation(T: Double): DoubleArray {
-        /*
-		// This code is to ensure EOP is called before calculating nutation. It is not required since EOP is called by
-		// TimeScale.getJD, and that method is called always in any ephemeris calculation before nutation
-		try {
-			double jd = Constant.J2000 + T * Constant.JULIAN_DAYS_PER_CENTURY;
-			double UT12TT = TimeScale.getTTminusUT1(new TimeElement(jd, SCALE.BARYCENTRIC_DYNAMICAL_TIME), new ObserverElement()) / Constant.SECONDS_PER_DAY;
-			EphemerisElement eph = new EphemerisElement();
-			eph.ephemMethod = type;
-			eph.frame = FRAME.ICRF;
-			EarthOrientationParameters.obtainEOP(jd - UT12TT, eph);
-		} catch (Exception exc) {}
-		*/
-
-        var nutationInLongitude = 0.0
-        var nutationInObliquity = 0.0
-//        when (type) {
-//            IAU_1976, LASKAR_1986, SIMON_1994, WILLIAMS_1994, JPL_DE4xx -> {
-//                var n = calcNutation_IAU1980(T, eph)
-//                nutationInLongitude = n[0]
-//                nutationInObliquity = n[1]
-//            }
-//            IAU_2006, IAU_2009 -> {
-        val n = calcNutation_IAU2000(T)
-        nutationInLongitude = n[0]
-        nutationInObliquity = n[1]
-
-        // Apply precession adjustments, see Wallace & Capitaine, 2006, Eqs.5
-        nutationInLongitude += nutationInLongitude * (0.4697E-6 - 2.7774E-6 * T)
-        nutationInObliquity -= nutationInObliquity * (2.7774E-6 * T)
-//            }
-//            else // IAU_2000
-//            -> {
-//                n = calcNutation_IAU2000(T, eph)
-//                nutationInLongitude = n[0]
-//                nutationInObliquity = n[1]
-//            }
-//        }
-
-        //      lastCalc = doubleArrayOf(nutationInLongitude, nutationInObliquity, T, type.ordinal())
-
-        /*		DataBase.addData("Nutation", new double[] {
-				nutationInLongitude, nutationInObliquity, T, type.ordinal()
-		}, true);
-*/
-        return doubleArrayOf(nutationInLongitude, nutationInObliquity)
-    }
-
-
-    /**
-     * Nutation, IAU 2000A model (MHB2000 luni-solar and planetary nutation with
-     * free core nutation omitted) plus optional support for free core nutation.
-     * This method is based on SOFA (Standards of Astronomy) software library.
-     * Results are set in fields [Nutation.nutationInLongitude] and
-     * [Nutation.nutationInObliquity].
-     * <P>
-     * The nutation components in longitude and obliquity are with respect to
-     * the equinox and ecliptic of date. The obliquity at J2000 is assumed to be
-     * the Lieske et al. (1977) value of 84381.448 arcsec.
-     * Both the luni-solar and planetary nutations are included. The latter are
-     * due to direct planetary nutations and the perturbations of the lunar and
-     * terrestrial orbits.
-     *
-     * The routine computes the MHB2000 nutation series with the associated
-     * corrections for planetary nutations. It is an implementation of the
-     * nutation part of the IAU 2000A precession- nutation model, formally
-     * adopted by the IAU General Assembly in 2000, namely MHB2000 (Mathews et
-     * al. 2002), but with the free core nutation (FCN) omitted.
-     * The full MHB2000 model also contains contributions to the nutations in
-     * longitude and obliquity due to the free-excitation of the
-     * free-core-nutation during the period 1979-2000. These FCN terms, which
-     * are time-dependent and unpredictable, are included in the present routine
-     * if [EarthOrientationParameters.obtainEOP] is previously called
-     * (note this should always happen since this method is needed by
-     * [TimeScale.getJD]).
-     *
-     * With the FCN corrections included, the present
-     * routine delivers a pole which is at current epochs accurate to a few
-     * hundred microarcseconds. The omission of FCN introduces further errors of
-     * about that size.
-     *
-     * The present routine provides classical nutation. The MHB2000 algorithm,
-     * from which it is adapted, deals also with (i) the offsets between the
-     * GCRS and mean poles and (ii) the adjustments in longitude and obliquity
-     * due to the changed precession rates. These additional functions, namely
-     * frame bias and precession adjustments, are applied independently in this
-     * package. Bias correction is made automatically in this library when
-     * selecting ICRS frame. The precession adjustments are applied in the
-     * precession methods from Capitaine and IAU2000 models.
-     *
-     * References:
-     * Mathews, P.M., Herring, T.A., Buffet, B.A., "Modeling of nutation and
-     * precession New nutation series for nonrigid Earth and insights into the
-     * Earth's interior", J.Geophys.Res., 107, B4, 2002. The MHB2000 code itself
-     * was obtained on 9th September 2002 from <A target="_blank" href = "ftp://maia.usno.navy.mil/conv2000/chapter5/IAU2000A">
-     * ftp://maia.usno.navy.mil/conv2000/chapter5/IAU2000A</A>.
-     * Souchay, J., Loysel, B., Kinoshita, H., Folgueira, M., A&A Supp. Ser.
-     * 135, 111 (1999).
-     * Wallace, P.T., "Software for Implementing the IAU 2000 Resolutions", in
-     * IERS Workshop 5.1 (2002).
-     * Chapront, J., Chapront-Touze, M. & Francou, G., Astron.Astrophys., 387,
-     * 700 (2002).
-     * Lieske, J.H., Lederle, T., Fricke, W. & Morando, B., "Expressions for the
-     * precession quantities based upon the IAU (1976) System of Astronomical
-     * Constants", Astron.Astrophys., 58, 1-16 (1977).
-     * Simon, J.-L., Bretagnon, P., Chapront, J., Chapront-Touze, M., Francou,
-     * G., Laskar, J., A&A282, 663-683 (1994).
-     * This revision: 2005 August 24.
-     *
-     * Copyright (C) 2005 IAU SOFA Review Board.
-     * @param T Time in Julian centuries from J2000.
-     * @throws JPARSECException If an error occurs.
-    </P> */
-    private fun calcNutation_IAU2000(T: Double): DoubleArray {
-        // * Initialize the nutation values.
-        var DP = 0.0
-        var DE = 0.0
-        var nutationInLongitude = 0.0
-        var nutationInObliquity = 0.0
-
-        /*
+    /*
 		 * ------------------- LUNI-SOLAR NUTATION -------------------
 		 */
 
-        /*
+    /*
 		 * Fundamental (Delaunay) arguments from Simon et al. (1994)
 		 */
 
-        // * Mean anomaly of the Moon.
-        val EL = (485868.249036 + T * (1717915923.2178 + T * (31.8792 + T * (0.051635 + T * -0.00024470)))) * ARCSEC_TO_RAD
+    // * Mean anomaly of the Moon.
+    val EL = doubleArrayOf(485868.249036, 1717915923.2178, 31.8792, 0.051635, -0.00024470).polynomialSum(T) * ARCSEC_TO_RAD
+    // * Mean anomaly of the Sun.
+    val ELP = doubleArrayOf(1287104.79305, 129596581.0481, -0.5532, 0.000136, -0.00001149).polynomialSum(T) * ARCSEC_TO_RAD
 
-        // * Mean anomaly of the Sun.
-        val ELP = (1287104.79305 + T * (129596581.0481 + T * (-0.5532 + T * (0.000136 + T * -0.00001149)))) * ARCSEC_TO_RAD
+    // * Mean argument of the latitude of the Moon.
+    val F = doubleArrayOf(335779.526232, 1739527262.8478, -12.7512, -0.001037, 0.00000417).polynomialSum(T) * ARCSEC_TO_RAD
 
-        // * Mean argument of the latitude of the Moon.
-        val F = (335779.526232 + T * (1739527262.8478 + T * (-12.7512 + T * (-0.001037 + T * 0.00000417)))) * ARCSEC_TO_RAD
+    // * Mean elongation of the Moon from the Sun.
+    val D = doubleArrayOf(1072260.70369, 1602961601.2090, -6.3706, 0.006593, -0.00003169).polynomialSum(T) * ARCSEC_TO_RAD
 
-        // * Mean elongation of the Moon from the Sun.
-        val D = (1072260.70369 + T * (1602961601.2090 + T * (-6.3706 + T * (0.006593 + T * -0.00003169)))) * ARCSEC_TO_RAD
+    // * Mean longitude of the ascending node of the Moon.
+    val OM = doubleArrayOf(450160.398036, -6962890.5431, 7.4722, 0.007702, -0.00005939).polynomialSum(T) * ARCSEC_TO_RAD
 
-        // * Mean longitude of the ascending node of the Moon.
-        val OM = (450160.398036 + T * (-6962890.5431 + T * (7.4722 + T * (0.007702 + T * -0.00005939)))) * ARCSEC_TO_RAD
+    // * Summation of luni-solar nutation series (in reverse order).
+    for (I in 677 downTo 0) {
+        val NALS_index = I * 5 - 1
 
-        // * Summation of luni-solar nutation series (in reverse order).
-        for (I in 677 downTo 0) {
-            val NALS_index = I * 5 - 1
+        // * Argument and functions.
+        val ARG = NALS[NALS_index + 1] * EL + NALS[NALS_index + 2] * ELP + NALS[NALS_index + 3] * F + NALS[NALS_index + 4] * D + NALS[NALS_index + 5] * OM
+        val SARG = Math.sin(ARG)
+        val CARG = Math.cos(ARG)
 
-            // * Argument and functions.
-            val ARG = IAU2000_NALS.NALS[NALS_index + 1] * EL + IAU2000_NALS.NALS[NALS_index + 2] * ELP + IAU2000_NALS.NALS[NALS_index + 3] * F + IAU2000_NALS.NALS[NALS_index + 4] * D + IAU2000_NALS.NALS[NALS_index + 5] * OM
-            val SARG = Math.sin(ARG)
-            val CARG = Math.cos(ARG)
+        val CLS_index = I * 6 - 1
 
-            val CLS_index = I * 6 - 1
+        // * Term.
+        DP += (CLS[CLS_index + 1] + CLS[CLS_index + 2] * T) * SARG + CLS[CLS_index + 3] * CARG
+        DE += (CLS[CLS_index + 4] + CLS[CLS_index + 5] * T) * CARG + CLS[CLS_index + 6] * SARG
 
-            // * Term.
-            DP += (IAU2000_CLS.CLS[CLS_index + 1] + IAU2000_CLS.CLS[CLS_index + 2] * T) * SARG + IAU2000_CLS.CLS[CLS_index + 3] * CARG
-            DE += (IAU2000_CLS.CLS[CLS_index + 4] + IAU2000_CLS.CLS[CLS_index + 5] * T) * CARG + IAU2000_CLS.CLS[CLS_index + 6] * SARG
+    }
 
-        }
+    // * Convert from 0.1 microarcsec units to radians.
+    nutationInLongitude = DP * ARCSEC_TO_RAD / 1.0e7
+    nutationInObliquity = DE * ARCSEC_TO_RAD / 1.0e7
 
-        // * Convert from 0.1 microarcsec units to radians.
-        nutationInLongitude = DP * ARCSEC_TO_RAD / 1.0e7
-        nutationInObliquity = DE * ARCSEC_TO_RAD / 1.0e7
-
-        /*
-		 * ------------------ PLANETARY NUTATION ------------------
-		 */
-
-        /*
+    /*
+    * ------------------ PLANETARY NUTATION ------------------
 		 * n.b. The MHB2000 code computes the luni-solar and planetary nutation
 		 * in different routines, using slightly different Delaunay arguments in
 		 * the two cases. This behaviour is faithfully reproduced here. Use of
@@ -344,75 +146,87 @@ object Nutation {
 		 * changes, well below 0.1 microarcsecond.
 		 */
 
-        // * Mean anomaly of the Moon.
-        val AL = 2.35555598 + 8328.6914269554 * T
+    // * Mean anomaly of the Moon.
+    val AL = 2.35555598 + 8328.6914269554 * T
 
-        // * Mean anomaly of the Sun.
-        val ALSU = 6.24006013 + 628.301955 * T
+    // * Mean anomaly of the Sun.
+    val ALSU = 6.24006013 + 628.301955 * T
 
-        // * Mean argument of the latitude of the Moon.
-        val AF = 1.627905234 + 8433.466158131 * T
+    // * Mean argument of the latitude of the Moon.
+    val AF = 1.627905234 + 8433.466158131 * T
 
-        // * Mean elongation of the Moon from the Sun.
-        val AD = 5.198466741 + 7771.3771468121 * T
+    // * Mean elongation of the Moon from the Sun.
+    val AD = 5.198466741 + 7771.3771468121 * T
 
-        // * Mean longitude of the ascending node of the Moon.
-        val AOM = 2.18243920 - 33.757045 * T
+    // * Mean longitude of the ascending node of the Moon.
+    val AOM = 2.18243920 - 33.757045 * T
 
-        // * General accumulated precession in longitude.
-        val APA = (0.02438175 + 0.00000538691 * T) * T
+    // * General accumulated precession in longitude.
+    val APA = (0.02438175 + 0.00000538691 * T) * T
 
-        // * Planetary longitudes, MercuryObject through Neptune (Souchay et al.
-        // 1999).
-        val ALME = 4.402608842 + 2608.7903141574 * T
-        val ALVE = 3.176146697 + 1021.3285546211 * T
-        val ALEA = 1.753470314 + 628.3075849991 * T
-        val ALMA = 6.203480913 + 334.0612426700 * T
-        val ALJU = 0.599546497 + 52.9690962641 * T
-        val ALSA = 0.874016757 + 21.3299104960 * T
-        val ALUR = 5.481293871 + 7.4781598567 * T
-        val ALNE = 5.321159000 + 3.8127774000 * T
+    // * Planetary longitudes, Mercury through Neptune (Souchay et al.
+    // 1999).
+    val ALME = 4.402608842 + 2608.7903141574 * T
+    val ALVE = 3.176146697 + 1021.3285546211 * T
+    val ALEA = 1.753470314 + 628.3075849991 * T
+    val ALMA = 6.203480913 + 334.0612426700 * T
+    val ALJU = 0.599546497 + 52.9690962641 * T
+    val ALSA = 0.874016757 + 21.3299104960 * T
+    val ALUR = 5.481293871 + 7.4781598567 * T
+    val ALNE = 5.321159000 + 3.8127774000 * T
 
-        // * Initialize the nutation values.
-        DP = 0.0
-        DE = 0.0
+    // * Initialize the nutation values.
+    DP = 0.0
+    DE = 0.0
 
-        // * Summation of planetary nutation series (in reverse order).
-        for (I in 686 downTo 0) {
+    // * Summation of planetary nutation series (in reverse order).
+    for (I in 686 downTo 0) {
 
-            val NAPL_index = I * 14 - 1
+        val NAPL_index = I * 14 - 1
 
-            // * Argument and functions.
-            val ARG = IAU2000_NAPL.NAPL[NAPL_index + 1] * AL + IAU2000_NAPL.NAPL[NAPL_index + 2] * ALSU + IAU2000_NAPL.NAPL[NAPL_index + 3] * AF + IAU2000_NAPL.NAPL[NAPL_index + 4] * AD + IAU2000_NAPL.NAPL[NAPL_index + 5] * AOM + IAU2000_NAPL.NAPL[NAPL_index + 6] * ALME + IAU2000_NAPL.NAPL[NAPL_index + 7] * ALVE + IAU2000_NAPL.NAPL[NAPL_index + 8] * ALEA + IAU2000_NAPL.NAPL[NAPL_index + 9] * ALMA + IAU2000_NAPL.NAPL[NAPL_index + 10] * ALJU + IAU2000_NAPL.NAPL[NAPL_index + 11] * ALSA + IAU2000_NAPL.NAPL[NAPL_index + 12] * ALUR + IAU2000_NAPL.NAPL[NAPL_index + 13] * ALNE + IAU2000_NAPL.NAPL[NAPL_index + 14] * APA
-            val SARG = Math.sin(ARG)
-            val CARG = Math.cos(ARG)
+        // * Argument and functions.
+        val ARG = NAPL[NAPL_index + 1] * AL +
+                NAPL[NAPL_index + 2] * ALSU +
+                NAPL[NAPL_index + 3] * AF +
+                NAPL[NAPL_index + 4] * AD +
+                NAPL[NAPL_index + 5] * AOM +
+                NAPL[NAPL_index + 6] * ALME +
+                NAPL[NAPL_index + 7] * ALVE +
+                NAPL[NAPL_index + 8] * ALEA +
+                NAPL[NAPL_index + 9] * ALMA +
+                NAPL[NAPL_index + 10] * ALJU +
+                NAPL[NAPL_index + 11] * ALSA +
+                NAPL[NAPL_index + 12] * ALUR +
+                NAPL[NAPL_index + 13] * ALNE +
+                NAPL[NAPL_index + 14] * APA
+        val SARG = Math.sin(ARG)
+        val CARG = Math.cos(ARG)
 
-            val ICPL_index = I * 4 - 1
+        val ICPL_index = I * 4 - 1
 
-            // * Term.
-            DP = DP + IAU2000_ICPL.ICPL[ICPL_index + 1] * SARG + IAU2000_ICPL.ICPL[ICPL_index + 2] * CARG
-            DE = DE + IAU2000_ICPL.ICPL[ICPL_index + 3] * SARG + IAU2000_ICPL.ICPL[ICPL_index + 4] * CARG
-        }
-
-        // * Add luni-solar and planetary components converting from 0.1
-        // microarcsecond.
-        nutationInLongitude += DP * ARCSEC_TO_RAD / 1.0e7
-        nutationInObliquity += DE * ARCSEC_TO_RAD / 1.0e7
-
-        return doubleArrayOf(nutationInLongitude, nutationInObliquity)
+        // * Term.
+        DP += ICPL[ICPL_index + 1] * SARG + ICPL[ICPL_index + 2] * CARG
+        DE += ICPL[ICPL_index + 3] * SARG + ICPL[ICPL_index + 4] * CARG
     }
 
+    // * Add luni-solar and planetary components converting from 0.1
+    // microarcsecond.
+    nutationInLongitude += DP * ARCSEC_TO_RAD / 1.0e7
+    nutationInObliquity += DE * ARCSEC_TO_RAD / 1.0e7
+
+    return NutationResult(nutationInLongitude, nutationInObliquity)
 }
 
 /**
  * Nutation, IAU 2000A model (MHB2000 luni-solar and planetary nutation with
  * free core nutation omitted).
  */
-internal object IAU2000_NALS {
-    /*
-	 * Luni-Solar argument multipliers L L' F D Om
-	 */
-    var NALS = doubleArrayOf(
+
+/*
+ * Luni-Solar argument multipliers L L' F D Om
+ */
+private val NALS by lazy {
+    doubleArrayOf(
             // DATA ( ( NALS(I,J)/ I=1,5 )/ J= 1, 10 )/
             0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, -2.0, 2.0, 0.0, 0.0, 2.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, -2.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 1.0, 1.0, 0.0, 2.0, 0.0, 2.0, 0.0, -1.0, 2.0, -2.0, 2.0,
             // DATA ( ( NALS(I,J)/ I=1,5 )/ J= 11, 20 )/
@@ -551,13 +365,13 @@ internal object IAU2000_NALS {
             -1.0, -1.0, 2.0, 6.0, 2.0, -1.0, 0.0, 2.0, 6.0, 1.0, 1.0, -1.0, 2.0, 4.0, 1.0, 1.0, 1.0, 2.0, 4.0, 2.0, 3.0, 1.0, 2.0, 2.0, 2.0, 5.0, 0.0, 2.0, 0.0, 1.0, 2.0, -1.0, 2.0, 4.0, 2.0, 2.0, 0.0, 2.0, 4.0, 1.0)
 }
 
-internal object IAU2000_CLS {
-    /*
-	 * Luni-Solar nutation coefficients, unit 1e-7 arcsec longitude (sin, t*sin,
-	 * cos) / obliquity (cos, t*cos, sin)
-	 */
+/*
+ * Luni-Solar nutation coefficients, unit 1e-7 arcsec longitude (sin, t*sin,
+ * cos) / obliquity (cos, t*cos, sin)
+ */
 
-    var CLS = doubleArrayOf(// DATA ( ( CLS(I,J) / I=1,6 ) / J= 1, 10 ) /
+private val CLS by lazy {
+    doubleArrayOf(// DATA ( ( CLS(I,J) / I=1,6 ) / J= 1, 10 ) /
             -172064161.0, -174666.0, 33386.0, 92052331.0, 9086.0, 15377.0, -13170906.0, -1675.0, -13696.0, 5730336.0, -3015.0, -4587.0, -2276413.0, -234.0, 2796.0, 978459.0, -485.0, 1374.0, 2074554.0, 207.0, -698.0, -897492.0, 470.0, -291.0, 1475877.0, -3633.0, 11817.0, 73871.0, -184.0, -1924.0, -516821.0, 1226.0, -524.0, 224386.0, -677.0, -174.0, 711159.0, 73.0, -872.0, -6750.0, 0.0, 358.0, -387298.0, -367.0, 380.0, 200728.0, 18.0, 318.0, -301461.0, -36.0, 816.0, 129025.0, -63.0, 367.0, 215829.0, -494.0, 111.0, -95929.0, 299.0, 132.0,
             // DATA ( ( CLS(I,J) / I=1,6 ) / J= 11, 20 ) /
             128227.0, 137.0, 181.0, -68982.0, -9.0, 39.0, 123457.0, 11.0, 19.0, -53311.0, 32.0, -4.0, 156994.0, 10.0, -168.0, -1235.0, 0.0, 82.0, 63110.0, 63.0, 27.0, -33228.0, 0.0, -9.0, -57976.0, -63.0, -189.0, 31429.0, 0.0, -75.0, -59641.0, -11.0, 149.0, 25543.0, -11.0, 66.0, -51613.0, -42.0, 129.0, 26366.0, 0.0, 78.0, 45893.0, 50.0, 31.0, -24236.0, -10.0, 20.0, 63384.0, 11.0, -150.0, -1220.0, 0.0, 29.0, -38571.0, -1.0, 158.0, 16452.0, -11.0, 68.0,
@@ -695,11 +509,11 @@ internal object IAU2000_CLS {
             -4.0, 0.0, 0.0, 2.0, 0.0, 0.0, -4.0, 0.0, 0.0, 2.0, 0.0, 0.0, -3.0, 0.0, 0.0, 2.0, 0.0, 0.0, 4.0, 0.0, 0.0, -2.0, 0.0, 0.0, 3.0, 0.0, 0.0, -1.0, 0.0, 0.0, -3.0, 0.0, 0.0, 1.0, 0.0, 0.0, -3.0, 0.0, 0.0, 1.0, 0.0, 0.0, -3.0, 0.0, 0.0, 2.0, 0.0, 0.0)
 }
 
-internal object IAU2000_NAPL {
-    /*
-	 * Planetary argument multipliers L L' F D Om Me Ve E Ma Ju Sa Ur Ne pre
-	 */
-    var NAPL = doubleArrayOf(// DATA ( ( NAPL(I,J) / I=1,14 ) / J= 1, 10 ) /
+/*
+ * Planetary argument multipliers L L' F D Om Me Ve E Ma Ju Sa Ur Ne pre
+ */
+private val NAPL by lazy {
+    doubleArrayOf(// DATA ( ( NAPL(I,J) / I=1,14 ) / J= 1, 10 ) /
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 8.0, -16.0, 4.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -8.0, 16.0, -4.0, -5.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 8.0, -16.0, 4.0, 5.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 2.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -4.0, 8.0, -1.0, -5.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, -8.0, 3.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0, 0.0, 3.0, -8.0, 3.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, -3.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.0, 6.0, -3.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, -8.0, 3.0, 0.0, 0.0, 0.0, 0.0,
             // DATA ( ( NAPL(I,J) / I=1,14 ) / J= 11, 20 ) /
             0.0, 0.0, 1.0, -1.0, 1.0, 0.0, 0.0, -5.0, 8.0, -3.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -4.0, 8.0, -3.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.0, -8.0, 1.0, 5.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -5.0, 6.0, 4.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, -5.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, -5.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0, 0.0, -1.0, 0.0, 2.0, -5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, -5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0, 0.0, -1.0, 0.0, -2.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.0, 5.0, 0.0, 0.0, 1.0,
@@ -839,12 +653,9 @@ internal object IAU2000_NAPL {
             1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 2.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 2.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 2.0, 2.0, 2.0, 0.0, 0.0, 2.0, 0.0, -2.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 2.0, 2.0, 2.0, 0.0, 3.0, -3.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 2.0, 0.0, 1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 2.0, 2.0, 0.0, 0.0, 2.0, 0.0, -2.0, 0.0, 0.0, 0.0, 0.0)
 }
 
-internal object IAU2000_ICPL {
-    /*
-	 * Planetary nutation coefficients, unit 1e-7 arcsec longitude (sin, cos) /
-	 * obliquity (sin, cos)
-	 */
-    var ICPL = doubleArrayOf(// DATA ( ( ICPL(I,J) / I=1,4 ) / J= 1, 10 ) /
+
+private val ICPL by lazy {
+    doubleArrayOf(// DATA ( ( ICPL(I,J) / I=1,4 ) / J= 1, 10 ) /
             1440.0, 0.0, 0.0, 0.0, 56.0, -117.0, -42.0, -40.0, 125.0, -43.0, 0.0, -54.0, 0.0, 5.0, 0.0, 0.0, 3.0, -7.0, -3.0, 0.0, 3.0, 0.0, 0.0, -2.0, -114.0, 0.0, 0.0, 61.0, -219.0, 89.0, 0.0, 0.0, -3.0, 0.0, 0.0, 0.0, -462.0, 1604.0, 0.0, 0.0,
             // DATA ( ( ICPL(I,J) / I=1,4 ) / J= 11, 20 ) /
             99.0, 0.0, 0.0, -53.0, -3.0, 0.0, 0.0, 2.0, 0.0, 6.0, 2.0, 0.0, 3.0, 0.0, 0.0, 0.0, -12.0, 0.0, 0.0, 0.0, 14.0, -218.0, 117.0, 8.0, 31.0, -481.0, -257.0, -17.0, -491.0, 128.0, 0.0, 0.0, -3084.0, 5123.0, 2735.0, 1647.0, -1444.0, 2409.0, -1286.0, -771.0,
@@ -983,4 +794,3 @@ internal object IAU2000_ICPL {
             // DATA ( ( ICPL(I,J) / I=1,4 ) / J=681,687 ) /
             0.0, 3.0, 2.0, 0.0, -24.0, -12.0, -5.0, 10.0, 4.0, 0.0, -1.0, -2.0, 13.0, 0.0, 0.0, -6.0, 7.0, 0.0, 0.0, -3.0, 3.0, 0.0, 0.0, -1.0, 3.0, 0.0, 0.0, -1.0)
 }
-

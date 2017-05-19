@@ -25,11 +25,11 @@ import net.arwix.astronomy.core.DEG
 import net.arwix.astronomy.core.Position
 import net.arwix.astronomy.core.calendar.getJT
 import net.arwix.astronomy.core.kepler.KeplerianOrbit
-import net.arwix.astronomy.core.vector.*
+import net.arwix.astronomy.core.vector.RectangularVector
+import net.arwix.astronomy.core.vector.SphericalVector
 import net.arwix.astronomy.core.vector.Vector
-import net.arwix.astronomy.ephem.Precession
-import net.arwix.astronomy.ephemeris.Nutation
-import net.arwix.astronomy.ephemeris.Obliquity
+import net.arwix.astronomy.core.vector.VectorType
+import net.arwix.astronomy.ephemeris.precession.Precession
 import net.arwix.astronomy.vsop87.*
 import org.junit.Test
 import java.util.*
@@ -57,7 +57,12 @@ class RiseSetCalculatorTest {
         objEcliptic = (AMercuryData() as VsopData).getEclipticCoordinates(t - dT)
         objGeoEcliptic = objEcliptic - earthEcliptic
 
-        objGeoEcliptic = net.arwix.astronomy.ephemeris.precession.Precession.JPL_DE4xx(t).transformFromJ2000(objGeoEcliptic)
+
+        val precession = Precession.JPL_DE4xx(t)
+        val nutation = precession.getNearsetNutation()
+        val obliquity = precession.getNearestObliquity()
+
+        objGeoEcliptic = precession.transformFromJ2000(objGeoEcliptic)
 //        objGeoEcliptic = PrecessionMethod.JPL_DE4xx.transformPrec(t, objGeoEcliptic)
 
         val lightTime = dT * 36525.0
@@ -74,21 +79,28 @@ class RiseSetCalculatorTest {
 
         //     objGeoEcliptic = PrecessionMethod.JPL_DE4xx.transformPrec(t, objGeoEcliptic)
         //eclipticToEquatorial
-        val epsilon = Obliquity.meanObliquity(t)
-        val m = Matrix.transpose(Matrix(Matrix.Axis.X, epsilon))
-        var vectorAltA = m * objGeoEcliptic
+//        objGeoEcliptic = net.arwix.astronomy.ephemeris.precession.Nutation.FastNutation(t).removeEclipticNutation(objGeoEcliptic)
+
+//        val epsilon = Obliquity.meanObliquity(t)
+//        val m = Matrix.transpose(Matrix(Matrix.Axis.X, epsilon))
+        var vectorAltA = obliquity.rotateFromEclipticToEquatorial(objGeoEcliptic)
+        //     var vectorAltA = m * objGeoEcliptic
 
         //    vectorAltA = Precession.precessFromJ2000(t, vectorAltA)
         //   vectorAltA = PrecessionMethod.JPL_DE4xx.transformPrec(t, vectorAltA)
-        vectorAltA = Nutation.nutateInEquatorialCoordinates(t, false, vectorAltA, true)
+        //    vectorAltA = Nutation.nutateInEquatorialCoordinates(t, true, vectorAltA, true)
 
-        System.out.println("e= " + epsilon.toString())
+        //   vectorAltA = nutateInEquatorial111Coordinates(t, vectorAltA, false)
+
+        vectorAltA = nutation.applyNutationToGeocentricVector(vectorAltA)
+
+        //   System.out.println("e= " + epsilon.toString())
         System.out.println("Alt J2000 " + printLong(vectorAltA))
         System.out.println("Alt J2000 " + printLat(vectorAltA))
 
 
         var vectorA = positionA.getGeocentricEquatorialPosition(t, AMercuryData() as VsopData)
-        vectorA = Precession.precessFromJ2000(t, vectorA)
+        vectorA = net.arwix.astronomy.ephem.Precession.precessFromJ2000(t, vectorA)
         System.out.println(printLong(vectorA))
         System.out.println(printLat(vectorA))
 
