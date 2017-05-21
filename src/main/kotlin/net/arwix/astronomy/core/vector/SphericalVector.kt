@@ -16,7 +16,11 @@
 
 package net.arwix.astronomy.core.vector
 
-
+/**
+ * @param phi longitude
+ * @param theta latitude
+ * @param r radius
+ */
 class SphericalVector(@JvmField var phi: Double, @JvmField var theta: Double, @JvmField var r: Double) : Vector() {
 
     constructor() : this(0.0, 0.0, 0.0)

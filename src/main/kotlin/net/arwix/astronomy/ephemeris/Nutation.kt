@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.arwix.astronomy.ephemeris.precession
+package net.arwix.astronomy.ephemeris
 
 import net.arwix.astronomy.annotation.Ecliptic
 import net.arwix.astronomy.annotation.Geocentric
@@ -22,19 +22,18 @@ import net.arwix.astronomy.core.ARCSEC_TO_RAD
 import net.arwix.astronomy.core.DEG_TO_RAD
 import net.arwix.astronomy.core.vector.Matrix
 import net.arwix.astronomy.core.vector.Vector
-import net.arwix.astronomy.ephemeris.Obliquity
 import java.lang.Math.*
 
 sealed class Nutation(val t: Double) : NutationTransformation {
 
-    class IAU_1980(t: Double) : Nutation(t), NutationTransformation by ImplNutationTransform(t, calcNutation_IAU1980(t))
-    class IAU_2000(t: Double) : Nutation(t), NutationTransformation by ImplNutationTransform(t, calcNutation_IAU2000(t))
+    class IAU_1980(t: Double, obliquity: Obliquity) : Nutation(t), NutationTransformation by ImplNutationTransform(calcNutation_IAU1980(t), obliquity.meanEps)
+    class IAU_2000(t: Double, obliquity: Obliquity) : Nutation(t), NutationTransformation by ImplNutationTransform(calcNutation_IAU2000(t), obliquity.meanEps)
     // Apply precession adjustments, see Wallace & Capitaine, 2006, Eqs.5
-    class IAU_2006(t: Double) : Nutation(t), NutationTransformation by ImplNutationTransform(t, calcNutation_IAU2000(t).let {
+    class IAU_2006(t: Double, obliquity: Obliquity) : Nutation(t), NutationTransformation by ImplNutationTransform(calcNutation_IAU2000(t).let {
         NutationResult(it.longitude * (1.0 + (0.4697E-6 - 2.7774E-6 * t)), it.obliquity * (1.0 + (2.7774E-6 * t)))
-    })
+    }, obliquity.meanEps)
 
-    class FAST(t: Double) : Nutation(t), NutationTransformation by ImplNutationTransform(t, getFastNutation(t))
+    class FAST(t: Double, obliquity: Obliquity) : Nutation(t), NutationTransformation by ImplNutationTransform(getFastNutation(t), obliquity.meanEps)
 }
 
 internal data class NutationResult(val longitude: Double, val obliquity: Double)
@@ -57,25 +56,24 @@ interface NutationTransformation {
      * @return Output equatorial coordinates
      */
     @Geocentric fun applyNutationToGeocentricVector(@Geocentric vector: Vector): Vector
-
     @Geocentric fun removeNutationFromGeocentricVector(@Geocentric vector: Vector): Vector
 }
 
-private class ImplNutationTransform(t: Double, nutationAngles: NutationResult) : NutationTransformation {
+private class ImplNutationTransform(nutationAngles: NutationResult, meanEps: Double) : NutationTransformation {
 
-    override val eclipticMatrix = getEclipticMatrix(t, nutationAngles)
-    override val geocentricMatrix = getGeocentricMatrix(t, nutationAngles)
+    override val eclipticMatrix = getEclipticMatrix(nutationAngles)
+    override val geocentricMatrix = getGeocentricMatrix(nutationAngles, meanEps)
 
 
     companion object {
-        private fun getGeocentricMatrix(t: Double, nutationAngles: NutationResult): Matrix {
+        private fun getGeocentricMatrix(nutationAngles: NutationResult, meanEps: Double): Matrix {
             val nut = nutationAngles
-            val oblm = Obliquity.meanObliquity(t)
+            val oblm = meanEps
             val dpsi = nut.longitude
             return Matrix(Matrix.Axis.X, -(oblm + nut.obliquity)) * Matrix(Matrix.Axis.Z, -dpsi) * Matrix(Matrix.Axis.X, oblm)
         }
 
-        private fun getEclipticMatrix(t: Double, nutationAngles: NutationResult): Matrix {
+        private fun getEclipticMatrix(nutationAngles: NutationResult): Matrix {
             val nut = nutationAngles
             val dpsi = nut.longitude
             return Matrix(Matrix.Axis.X, -(nut.obliquity)) * Matrix(Matrix.Axis.Z, -dpsi)

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.arwix.astronomy.ephemeris.precession
+package net.arwix.astronomy.ephemeris
 
 import net.arwix.astronomy.core.ARCSEC_TO_RAD
 import net.arwix.astronomy.math.polynomialSum

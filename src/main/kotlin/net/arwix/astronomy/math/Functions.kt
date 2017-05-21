@@ -16,11 +16,15 @@
 
 package net.arwix.astronomy.math
 
-//a + b*x + c *xx + d * xxx
-
-//val arr = doubleArrayOf()
-
 fun DoubleArray.polynomialSum(x: Double): Double {
     var t = 1.0
     return this.fold(0.0, { acc, d -> (acc + d * t).let { t *= x; it } })
 }
+
+/**
+ * Module operation in arcseconds.
+ *
+ * @param x Value in arcseconds.
+ * @return module.
+ */
+fun Double.mod3600() = this - 1296000.0 * Math.floor(this / 1296000.0)

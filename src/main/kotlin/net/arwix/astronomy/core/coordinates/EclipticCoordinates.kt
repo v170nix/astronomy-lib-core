@@ -19,6 +19,7 @@ package net.arwix.astronomy.core.coordinates
 import net.arwix.astronomy.core.Epoch
 import net.arwix.astronomy.core.vector.Vector
 
+@Deprecated("use FunCoordinates")
 interface EclipticCoordinates<out T> {
     fun getEpoch(): Epoch
     fun getIdObject(): T

@@ -16,6 +16,9 @@
 
 package net.arwix.astronomy.core.coordinates
 
+import net.arwix.astronomy.annotation.Azimuth
+import net.arwix.astronomy.annotation.Equatorial
+import net.arwix.astronomy.annotation.Geocentric
 import net.arwix.astronomy.core.calendar.getGMST
 import net.arwix.astronomy.core.vector.Matrix
 import net.arwix.astronomy.core.vector.SphericalVector
@@ -44,11 +47,12 @@ data class AzimuthCoordintates(val lambda: Double, val phi: Double) {
     /**
      * Получение азимутальных координат
      * @param GMST Среднее гринвичское звездное время
-     * @param geoEquatorialVector ГеоЦентрические экваториальные координаты
+     * @param inVector ГеоЦентрические экваториальные координаты
      * @return азимутальный вектор
      */
-    fun getCoordinates(GMST: Double, geoEquatorialVector: Vector): Vector {
-        val vector: SphericalVector = geoEquatorialVector.getVectorOfType(VectorType.SPHERICAL) as SphericalVector
+    @Azimuth @Geocentric
+    fun getCoordinates(GMST: Double, @Equatorial @Geocentric inVector: Vector): Vector {
+        val vector: SphericalVector = inVector.getVectorOfType(VectorType.SPHERICAL) as SphericalVector
         val tau = GMST + lambda - vector.phi
         return hourMatrix * SphericalVector(tau, vector.theta, vector.r)
     }

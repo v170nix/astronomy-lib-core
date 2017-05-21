@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-package net.arwix.astronomy.annotation
+package net.arwix.astronomy.core.coordinates
 
-@Retention(AnnotationRetention.RUNTIME)
-annotation class Geocentric
+import net.arwix.astronomy.core.vector.Vector
 
-@Retention(AnnotationRetention.RUNTIME)
-annotation class Heliocentric
-
-@Retention(AnnotationRetention.RUNTIME)
-annotation class Ecliptic
-
-@Retention(AnnotationRetention.RUNTIME)
-annotation class Equatorial
-
-@Retention(AnnotationRetention.RUNTIME)
-annotation class Azimuth
+typealias FunGetHeliocentricEclipticCoordinates = (t: Double) -> Vector
+typealias FunGetGeocentricEclipticCoordinates = (t: Double) -> Vector
+typealias FunGetGeocentricEquatorialCoordinates = (t: Double) -> Vector

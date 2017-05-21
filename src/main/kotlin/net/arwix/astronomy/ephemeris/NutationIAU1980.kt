@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package net.arwix.astronomy.ephemeris.precession
+package net.arwix.astronomy.ephemeris
 
 import net.arwix.astronomy.core.ARCSEC_TO_RAD
+import net.arwix.astronomy.math.mod3600
 
 
 /**
@@ -77,15 +78,6 @@ import net.arwix.astronomy.core.ARCSEC_TO_RAD
 internal fun calcNutation_IAU1980(T: Double): NutationResult {
 
     /**
-     * Module operation in arcseconds.
-     *
-     * @param x Value in arcseconds.
-     * @return module.
-     */
-    fun mod3600(x: Double) = x - 1296000.0 * Math.floor(x / 1296000.0)
-
-
-    /**
      * Array to hold sines of multiple angles
      */
     val ss = Array(5) { DoubleArray(8) }
@@ -144,30 +136,30 @@ internal fun calcNutation_IAU1980(T: Double): NutationResult {
 		 * longitude of the mean ascending node of the lunar orbit on the
 		 * ecliptic, measured from the mean equinox of date
 		 */
-    val OM = (mod3600(-6962890.539 * T + 450160.280) + (0.008 * T + 7.455) * T2) * ARCSEC_TO_RAD
+    val OM = ((-6962890.539 * T + 450160.280).mod3600() + (0.008 * T + 7.455) * T2) * ARCSEC_TO_RAD
 
     /*
 		 * mean longitude of the Sun minus the mean longitude of the Sun's
 		 * perigee
 		 */
-    val MS = (mod3600(129596581.224 * T + 1287099.804) - (0.012 * T + 0.577) * T2) * ARCSEC_TO_RAD
+    val MS = ((129596581.224 * T + 1287099.804).mod3600() - (0.012 * T + 0.577) * T2) * ARCSEC_TO_RAD
 
     /*
 		 * mean longitude of the Moon minus the mean longitude of the Moon's
 		 * perigee
 		 */
-    val MM = (mod3600(1717915922.633 * T + 485866.733) + (0.064 * T + 31.310) * T2) * ARCSEC_TO_RAD
+    val MM = ((1717915922.633 * T + 485866.733).mod3600() + (0.064 * T + 31.310) * T2) * ARCSEC_TO_RAD
 
     /*
 		 * mean longitude of the Moon minus the mean longitude of the Moon's
 		 * node
 		 */
-    val FF = (mod3600(1739527263.137 * T + 335778.877) + (0.011 * T - 13.257) * T2) * ARCSEC_TO_RAD
+    val FF = ((1739527263.137 * T + 335778.877).mod3600() + (0.011 * T - 13.257) * T2) * ARCSEC_TO_RAD
 
     /*
 		 * mean elongation of the Moon from the Sun.
 		 */
-    val DD = (mod3600(1602961601.328 * T + 1072261.307) + (0.019 * T - 6.891) * T2) * ARCSEC_TO_RAD
+    val DD = ((1602961601.328 * T + 1072261.307).mod3600() + (0.019 * T - 6.891) * T2) * ARCSEC_TO_RAD
 
     /*
 		 * Calculate sin( i*MM ), etc. for needed multiple angles
@@ -191,7 +183,7 @@ internal fun calcNutation_IAU1980(T: Double): NutationResult {
         m = 0
         while (m < 5) {
             p++
-            j = IAU1980_NT[p]
+            j = net.arwix.astronomy.ephemeris.IAU1980_NT[p]
             if (j != 0) {
                 k = j
                 if (j < 0)
