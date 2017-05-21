@@ -20,11 +20,13 @@ package net.arwix.astronomy.calculator
 import net.arwix.astronomy.annotation.Ecliptic
 import net.arwix.astronomy.annotation.Geocentric
 import net.arwix.astronomy.annotation.Heliocentric
+import net.arwix.astronomy.core.ARCSEC_TO_RAD
 import net.arwix.astronomy.core.C_Light
 import net.arwix.astronomy.core.DEG
 import net.arwix.astronomy.core.Position
 import net.arwix.astronomy.core.calendar.getJT
-import net.arwix.astronomy.core.kepler.JPLKeplerObject
+import net.arwix.astronomy.core.kepler.KeplerObjectJPL
+import net.arwix.astronomy.core.kepler.KeplerObjectSimonJ2000
 import net.arwix.astronomy.core.vector.RectangularVector
 import net.arwix.astronomy.core.vector.SphericalVector
 import net.arwix.astronomy.core.vector.Vector
@@ -49,6 +51,14 @@ class RiseSetCalculatorTest {
         calendar.set(Calendar.MILLISECOND, 0)
         val t = calendar.getJT(true)
 
+
+        var x = (538101628.6889819 * 26.7 + 908103.213);
+        x += (6.39e-6 * 26.7 - 0.0192789) * 26.7 * 26.7
+        x *= ARCSEC_TO_RAD
+        //0.65472198132691
+        System.out.println(x)
+        System.out.println(KeplerObjectSimonJ2000.Mercury(26.7).Longitude)
+
         // J2000
         val positionA = Position(AEarthData() as VsopData)
         @Heliocentric @Ecliptic var earthEcliptic = (AEarthData() as VsopData).getEclipticCoordinates(t)
@@ -70,8 +80,8 @@ class RiseSetCalculatorTest {
         val lightTime = dT * 36525.0
 
 
-        val orbit = JPLKeplerObject.Venus(t).getOrbitalPlane()
-        val eOrbit = JPLKeplerObject.EarthMoonBarycenter(t).getOrbitalPlane()
+        val orbit = KeplerObjectJPL.Venus(t).getOrbitalPlane()
+        val eOrbit = KeplerObjectJPL.EarthMoonBarycenter(t).getOrbitalPlane()
 
         //       objGeoEcliptic = objGeoEcliptic - (orbit.velocity - eOrbit.velocity).times(dT * 36525.0)
 
