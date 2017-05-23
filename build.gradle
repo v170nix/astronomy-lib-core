@@ -9,7 +9,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.2-2"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
@@ -63,9 +63,9 @@ repositories {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib"
     compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.15'
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-runtime', version: '1.1.2-2'
+//    compile group: 'org.jetbrains.kotlin', name: 'kotlin-runtime', version: '1.1.2-2'
     testCompile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     testCompile "junit:junit:4.12"
     testCompile "net.arwix.astronomy:astronomy-vsop87-c:0.90"

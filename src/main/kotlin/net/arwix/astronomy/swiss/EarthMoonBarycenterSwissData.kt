@@ -16,9 +16,7 @@
 
 package net.arwix.astronomy.swiss
 
-import net.arwix.astronomy.core.coordinates.FunGetHeliocentricEclipticCoordinates
-
-object EarthMoonBarycenterObject : SwissData() {
+object EarthMoonBarycenterSwissData : SwissData() {
     /* heliocentric earth-moon barycenter
 	   polar coordinates re fixed J2000 mean equinox and ecliptic
 	   S. L. Moshier
@@ -51,8 +49,5 @@ object EarthMoonBarycenterObject : SwissData() {
     override val max_power_of_t = 3
     override val distance = 1.000139872959708
 
-
-    override val getCoordinates: FunGetHeliocentricEclipticCoordinates
-        get() = super.getCoordinates
 }
 

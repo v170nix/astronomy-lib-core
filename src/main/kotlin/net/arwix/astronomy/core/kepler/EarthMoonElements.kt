@@ -25,7 +25,7 @@ class EarthMoonElements(val T: Double) {
     private val T2 = T * T
 
     /**
-     * Mean elongation of moon = D
+     * Mean elongation of moon = elongation
      */
     val elongation: Radian by lazy {
         val x = doubleArrayOf(1.0722612202445078e+06, 1.6029616009939659e+09).polynomialSum(T) +
@@ -34,7 +34,7 @@ class EarthMoonElements(val T: Double) {
     }
 
     /**
-     * Mean distance of moon from its ascending node = F
+     * Mean distance of moon from its ascending node = ascendingNode
      */
     val ascendingNode: Radian by lazy {
         val x = doubleArrayOf(3.3577951412884740e+05, 1.7395272628437717e+09).polynomialSum(T) +
@@ -53,7 +53,7 @@ class EarthMoonElements(val T: Double) {
     /**
      * Mean anomaly of moon = l
      */
-    val anomaly: Radian by lazy {
+    val moonAnomaly: Radian by lazy {
         val x = doubleArrayOf(4.8586817465825332e+05, 1.7179159228846793e+09).polynomialSum(T) +
                 doubleArrayOf(3.1501359071894147e+01, 5.2099641302735818e-02, -2.536291235258e-004, -2.506365935364e-008, 3.452144225877e-011, -1.755312760154e-012).polynomialSum(T) * T2
         ARCSEC_TO_RAD * x
@@ -72,7 +72,7 @@ class EarthMoonElements(val T: Double) {
      *  Lunar free librations
      *  74.7 years. Denoted W or LA
      */
-    val lA: Radian by lazy {
+    val LA: Radian by lazy {
         val x = (-0.112 * T + 1.73655499e6) * T - 389552.81;
         ARCSEC_TO_RAD * (x);
     }

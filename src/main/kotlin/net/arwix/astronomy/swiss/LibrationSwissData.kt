@@ -16,7 +16,7 @@
 
 package net.arwix.astronomy.swiss
 
-object LibrationObject : SwissData() {
+object LibrationSwissData : SwissData() {
     /*  Lunar librations.
 Euler angles re equinox and ecliptic of date.
 

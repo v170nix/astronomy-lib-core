@@ -80,7 +80,7 @@ abstract class Calculator<T> {
 
 //    companion object {
 //
-//        inline fun <reified K, F> create(date: Calendar, location: Location, noinline getGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector): Calculator<F> {
+//        inline fun <reified K, ascendingNode> create(date: Calendar, location: Location, noinline getGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector): Calculator<ascendingNode> {
 //            when (K::class) {
 //                RiseSetCalculator::class -> RiseSetCalculator(date, location, getGeocentricEquatorialCoordinates)
 //                else -> throw IllegalAccessException()

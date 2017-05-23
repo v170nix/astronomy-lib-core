@@ -21,3 +21,9 @@ import net.arwix.astronomy.core.vector.Vector
 typealias FunGetHeliocentricEclipticCoordinates = (t: Double) -> Vector
 typealias FunGetGeocentricEclipticCoordinates = (t: Double) -> Vector
 typealias FunGetGeocentricEquatorialCoordinates = (t: Double) -> Vector
+
+interface Coordinates {
+    val getHeliocentricEclipticCoordinates: FunGetHeliocentricEclipticCoordinates
+    val getGeocentricEclipticCoordinates: FunGetGeocentricEclipticCoordinates
+    val getGeocentricEquatorialCoordinates: FunGetGeocentricEclipticCoordinates
+}

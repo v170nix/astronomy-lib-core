@@ -223,7 +223,7 @@ internal fun calcNutation_IAU2000(T: Double): NutationResult {
  */
 
 /*
- * Luni-Solar argument multipliers L L' F D Om
+ * Luni-Solar argument multipliers L L' ascendingNode elongation Om
  */
 private val NALS by lazy {
     doubleArrayOf(
@@ -510,7 +510,7 @@ private val CLS by lazy {
 }
 
 /*
- * Planetary argument multipliers L L' F D Om Me Ve E Ma Ju Sa Ur Ne pre
+ * Planetary argument multipliers L L' ascendingNode elongation Om Me Ve E Ma Ju Sa Ur Ne pre
  */
 private val NAPL by lazy {
     doubleArrayOf(// DATA ( ( NAPL(I,J) / I=1,14 ) / J= 1, 10 ) /

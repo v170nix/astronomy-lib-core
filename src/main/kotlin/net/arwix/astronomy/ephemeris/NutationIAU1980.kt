@@ -61,7 +61,7 @@ import net.arwix.astronomy.math.mod3600
  * References:
  * "Summary of 1980 IAU Theory of Nutation (Final Report of the IAU Working
  * Group on Nutation)", P. K. Seidelmann et al., in Transactions of the IAU
- * Vol. XVIII A, Reports on Astronomy, P. A. Wayman, ed.; D. Reidel Pub.
+ * Vol. XVIII A, Reports on Astronomy, P. A. Wayman, ed.; elongation. Reidel Pub.
  * Co., 1982.
  * "Nutation and the Earth's Rotation", I.A.U. Symposium No. 78, May, 1977,
  * page 256. I.A.U., 1980.

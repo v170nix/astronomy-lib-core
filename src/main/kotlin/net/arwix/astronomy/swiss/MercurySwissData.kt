@@ -16,7 +16,7 @@
 
 package net.arwix.astronomy.swiss
 
-object MercuryObject : SwissData() {
+object MercurySwissData : SwissData() {
     /*
 	First date in file = 1228000.50 / last 2817104.5
 	Number of records = 397276.0

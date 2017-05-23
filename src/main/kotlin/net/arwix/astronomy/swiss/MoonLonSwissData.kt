@@ -16,7 +16,7 @@
 
 package net.arwix.astronomy.swiss
 
-object MoonLonRad : SwissData() {
+object MoonLonSwissData : SwissData() {
     /* geocentric moon
 	   polar coordinates re mean equinox and ecliptic of date
 	   For latitude coefficients, see mlat404.c.

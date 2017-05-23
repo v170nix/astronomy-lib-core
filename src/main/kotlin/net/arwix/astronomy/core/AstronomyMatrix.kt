@@ -91,8 +91,6 @@ object AstronomyMatrix {
 
         val dpsi = (-17.200 * Math.sin(N) - 1.319 * Math.sin(2 * (F - D + N)) - 0.227 * Math.sin(2 * (F + N)) + 0.206 * Math.sin(2 * N) + 0.143 * Math.sin(ls)) / ARCS
         val deps = (+9.203 * Math.cos(N) + 0.574 * Math.cos(2 * (F - D + N)) + 0.098 * Math.cos(2 * (F + N)) - 0.090 * Math.cos(2 * N)) / ARCS
-        System.out.println("psi" + dpsi)
-        System.out.println("deps" + deps)
         return Matrix(Matrix.Axis.X, -eps - deps) * Matrix(Matrix.Axis.Z, -dpsi) * Matrix(Matrix.Axis.X, eps)
     }
 

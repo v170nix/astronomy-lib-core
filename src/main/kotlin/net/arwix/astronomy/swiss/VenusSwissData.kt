@@ -17,7 +17,7 @@
 package net.arwix.astronomy.swiss
 
 
-object VenusObject : SwissData() {
+object VenusSwissData : SwissData() {
     /*
 	First date in file = 1228000.50
 	Number of records = 397276.0

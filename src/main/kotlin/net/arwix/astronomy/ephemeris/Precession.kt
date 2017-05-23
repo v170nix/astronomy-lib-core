@@ -78,7 +78,18 @@ sealed class Precession(val t: Double) : PrecessionTransformation {
      * @param t Julian centuries of input vector (ecliptic).
      * @return PrecessionTransformation referred to mean equinox and ecliptic of JD.
      */
-    @Ecliptic class JPL_DE4xx(t: Double) : Precession(t), PrecessionTransformation by Impl(true, getEclipticMatrix(JPL_DE4xx_Matrices, t))
+    @Ecliptic class JPL_DE4xx(val tt: Double) : Precession(tt), PrecessionTransformation by Impl(true, getEclipticMatrix(JPL_DE4xx_Matrices, tt)) {
+
+        fun getD(): DoubleArray {
+            val list: Array<DoubleArray> = JPL_DE4xx_Matrices
+            val T10 = tt / 10.0 /* thousands of years */
+            val pA = list[0].fold(0.0, { acc, d -> acc * T10 + d }) * ARCSEC_TO_RAD * T10
+            val W = list[1].fold(0.0, { acc, d -> acc * T10 + d })
+            val z = list[2].fold(0.0, { acc, d -> acc * T10 + d })
+            return doubleArrayOf(pA, W, z)
+        }
+
+    }
 
     /**
      * Precession for selecting SIMON formulae of precession, obliquity,

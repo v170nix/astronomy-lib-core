@@ -16,7 +16,7 @@
 
 package net.arwix.astronomy.swiss
 
-object SaturnObject : SwissData() {
+object SaturnSwissData : SwissData() {
 
     /*
 	First date in file = 625296.50

@@ -16,7 +16,7 @@
 
 package net.arwix.astronomy.swiss
 
-object PlutoObject : SwissData() {
+object PlutoSwissData : SwissData() {
     /*
 	First date in file = 625296.50 / last 2817057.5
 	Number of records = 16731.0

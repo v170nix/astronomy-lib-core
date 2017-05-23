@@ -16,7 +16,7 @@
 
 package net.arwix.astronomy.swiss
 
-object NeptuneObject : SwissData() {
+object NeptuneSwissData : SwissData() {
     /*
 	First date in file = 625296.50
 	Number of records = 16731.0

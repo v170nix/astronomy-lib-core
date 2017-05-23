@@ -16,32 +16,19 @@
 
 package net.arwix.astronomy.swiss
 
-import net.arwix.astronomy.core.coordinates.FunGetHeliocentricEclipticCoordinates
-import net.arwix.astronomy.core.vector.RectangularVector
-
 
 abstract class SwissData {
 
-    abstract protected val tabl: DoubleArray
-    abstract protected val tabb: DoubleArray
-    abstract protected val tabr: DoubleArray
-    abstract protected val args: IntArray
-    abstract protected val maxargs: Int
-    abstract protected val max_harmonic: IntArray
-    abstract protected val max_power_of_t: Int
-    abstract protected val distance: Double
-
-    val timescale = 3652500.0
-    val trunclvl = 1.0
-
-    open val getCoordinates: FunGetHeliocentricEclipticCoordinates = { t ->
-        RectangularVector(
-                gplan(t, args, distance, tabb, tabl,
-                        tabr, max_harmonic, max_power_of_t,
-                        maxargs, timescale, trunclvl)
-        )
-    }
-
+    abstract internal val tabl: DoubleArray
+    abstract internal val tabb: DoubleArray
+    abstract internal val tabr: DoubleArray
+    abstract internal val args: IntArray
+    abstract internal val maxargs: Int
+    abstract internal val max_harmonic: IntArray
+    abstract internal val max_power_of_t: Int
+    abstract internal val distance: Double
+    internal val timescale = 3652500.0
+    internal val trunclvl = 1.0
 }
 
 
