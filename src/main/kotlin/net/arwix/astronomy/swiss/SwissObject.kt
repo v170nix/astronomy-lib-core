@@ -26,6 +26,7 @@ import net.arwix.astronomy.core.vector.Matrix
 import net.arwix.astronomy.core.vector.RectangularVector
 import net.arwix.astronomy.core.vector.VectorType
 import net.arwix.astronomy.ephemeris.Precession
+import net.arwix.astronomy.physical.PhysicalBody
 
 
 sealed class SwissObject : Coordinates {
@@ -33,8 +34,8 @@ sealed class SwissObject : Coordinates {
     class Libration : SwissObject(), Coordinates by SwissLibrationImpl
     class MERCURY : SwissObject(), Coordinates by SwissBaseImpl(MercurySwissData)
     class VENUS : SwissObject(), Coordinates by SwissBaseImpl(VenusSwissData)
-    class Earth_Moon_Barycenter : SwissObject(), Coordinates by SwissEarthMoonBarycenterImpl
-    class EARTH : SwissObject(), Coordinates by SwissBaseImpl(EarthMoonBarycenterSwissData)
+    class EMBarycenter : SwissObject(), Coordinates by SwissEarthMoonBarycenterImpl
+    class EARTH(precession: Precession.WILLIAMS_1994) : SwissObject(), Coordinates by SwissEarthImpl(precession)
     class Moon(precession: Precession.WILLIAMS_1994) : SwissObject(), Coordinates by SwissMoonImpl(precession)
     class MARS : SwissObject(), Coordinates by SwissBaseImpl(MarsSwissData)
     class JUPITER : SwissObject(), Coordinates by SwissBaseImpl(JupiterSwissData)
@@ -70,6 +71,28 @@ private object SwissEarthMoonBarycenterImpl : Coordinates {
                     EarthMoonBarycenterSwissData.max_power_of_t, EarthMoonBarycenterSwissData.maxargs,
                     EarthMoonBarycenterSwissData.timescale, EarthMoonBarycenterSwissData.trunclvl, false))
 
+        }
+}
+
+private class SwissEarthImpl(val precession: Precession.WILLIAMS_1994) : Coordinates {
+    override val getGeocentricEclipticCoordinates: FunGetGeocentricEclipticCoordinates get() = TODO("not implemented")
+    override val getGeocentricEquatorialCoordinates: FunGetGeocentricEclipticCoordinates get() = TODO("not implemented")
+
+    override val getHeliocentricEclipticCoordinates: FunGetHeliocentricEclipticCoordinates
+        get() = { t ->
+            val p = g3plan(t, EarthMoonBarycenterSwissData.args, EarthMoonBarycenterSwissData.distance,
+                    EarthMoonBarycenterSwissData.tabb, EarthMoonBarycenterSwissData.tabl,
+                    EarthMoonBarycenterSwissData.tabr, EarthMoonBarycenterSwissData.max_harmonic,
+                    EarthMoonBarycenterSwissData.max_power_of_t, EarthMoonBarycenterSwissData.maxargs,
+                    EarthMoonBarycenterSwissData.timescale, EarthMoonBarycenterSwissData.trunclvl, false)
+            val moonLat = g1plan(t, MoonLatSwissData.args, MoonLatSwissData.tabl, MoonLatSwissData.max_harmonic, MoonLatSwissData.timescale)
+            var moon = g2plan(t, MoonLonSwissData.args, MoonLonSwissData.distance,
+                    MoonLonSwissData.tabl, MoonLonSwissData.tabr, MoonLonSwissData.max_harmonic, MoonLonSwissData.timescale, moonLat)
+            moon = precession.transformToJ2000(moon)
+            // Earth position is found indirectly, knowing the position of the
+            // Earth-Moon barycenter and the geocentric Moon
+            val EarthMoonRatio = PhysicalBody.Moon.massRatio / PhysicalBody.EARTH.massRatio
+            p - moon * (1.0 / (EarthMoonRatio + 1.0))
         }
 }
 

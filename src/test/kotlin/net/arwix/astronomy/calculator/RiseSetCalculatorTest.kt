@@ -50,7 +50,7 @@ class RiseSetCalculatorTest {
         calendar.set(Calendar.MILLISECOND, 0)
         val t = calendar.getJT(true)
 
-        val em = SwissObject.Earth_Moon_Barycenter().getHeliocentricEclipticCoordinates(t).getVectorOfType(VectorType.SPHERICAL)
+        val em = SwissObject.EMBarycenter().getHeliocentricEclipticCoordinates(t).getVectorOfType(VectorType.SPHERICAL)
 
         println("${em[0]}, ${em[1]}, ${em[2]}")
 
@@ -75,7 +75,7 @@ class RiseSetCalculatorTest {
 
         // J2000
         val positionA = Position(AEarthData() as VsopData)
-        @Heliocentric @Ecliptic var earthEcliptic = (AEarthData() as VsopData).getEclipticCoordinates(t)
+        @Heliocentric @Ecliptic var earthEcliptic = SwissObject.EARTH(Precession.WILLIAMS_1994(t)).getHeliocentricEclipticCoordinates(t) // (AEarthData() as VsopData).getEclipticCoordinates(t)
 //        @Heliocentric @Ecliptic var objEcliptic = (AMercuryData() as VsopData).getEclipticCoordinates(t)
         @Heliocentric @Ecliptic var objEcliptic = SwissObject.VENUS().getHeliocentricEclipticCoordinates(t)
         @Geocentric @Ecliptic var objGeoEcliptic: Vector = objEcliptic - earthEcliptic
