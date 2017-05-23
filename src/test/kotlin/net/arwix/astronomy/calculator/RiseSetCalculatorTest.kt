@@ -25,13 +25,13 @@ import net.arwix.astronomy.core.C_Light
 import net.arwix.astronomy.core.DEG
 import net.arwix.astronomy.core.Position
 import net.arwix.astronomy.core.calendar.getJT
-import net.arwix.astronomy.core.kepler.KeplerObjectJPL
+import net.arwix.astronomy.core.kepler.KeplerBodyJPL
 import net.arwix.astronomy.core.vector.RectangularVector
 import net.arwix.astronomy.core.vector.SphericalVector
 import net.arwix.astronomy.core.vector.Vector
 import net.arwix.astronomy.core.vector.VectorType
 import net.arwix.astronomy.ephemeris.Precession
-import net.arwix.astronomy.swiss.SwissObject
+import net.arwix.astronomy.swiss.SwissBody
 import net.arwix.astronomy.vsop87.*
 import org.junit.Test
 import java.util.*
@@ -41,7 +41,7 @@ class RiseSetCalculatorTest {
     @Test
     fun calls() {
         val calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-        calendar.set(Calendar.YEAR, 2014)
+        calendar.set(Calendar.YEAR, 2044)
         calendar.set(Calendar.MONTH, 8)
         calendar.set(Calendar.DAY_OF_MONTH, 17)
         calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -50,16 +50,16 @@ class RiseSetCalculatorTest {
         calendar.set(Calendar.MILLISECOND, 0)
         val t = calendar.getJT(true)
 
-        val em = SwissObject.EMBarycenter().getHeliocentricEclipticCoordinates(t).getVectorOfType(VectorType.SPHERICAL)
+        val em = SwissBody.EMBarycenter().getHeliocentricEclipticCoordinates(t).getVectorOfType(VectorType.SPHERICAL)
 
         println("${em[0]}, ${em[1]}, ${em[2]}")
 
-        val libcords = SwissObject.Libration().getHeliocentricEclipticCoordinates(t).getVectorOfType(VectorType.SPHERICAL)
+        val libcords = SwissBody.Libration().getHeliocentricEclipticCoordinates(t).getVectorOfType(VectorType.SPHERICAL)
 
         //94.15204131505705, 0.027651453984486103, -1.8464426519050674E-5
         System.out.println("${libcords[0]}, ${libcords[1]}, ${libcords[2]}")
 
-        val bari = SwissObject.Moon(Precession.WILLIAMS_1994(t)).getHeliocentricEclipticCoordinates(t).getVectorOfType(VectorType.SPHERICAL)
+        val bari = SwissBody.Moon(Precession.Williams1994(t)).getHeliocentricEclipticCoordinates(t).getVectorOfType(VectorType.SPHERICAL)
 
         //0.9993430681091251, -0.10670447907632039, -4.362307465162142E-4
         System.out.println("${Math.toDegrees(bari[0])}, ${Math.toDegrees(bari[1])}, ${bari[2] * AU}")
@@ -71,21 +71,21 @@ class RiseSetCalculatorTest {
 //        x *= ARCSEC_TO_RAD
 //        //0.65472198132691
 //        System.out.println(x)
-//        System.out.println(KeplerObjectSimonJ2000.Mercury(26.7).Longitude)
+//        System.out.println(KeplerBodySimonJ2000.Mercury(26.7).Longitude)
 
         // J2000
         val positionA = Position(AEarthData() as VsopData)
-        @Heliocentric @Ecliptic var earthEcliptic = SwissObject.EARTH(Precession.WILLIAMS_1994(t)).getHeliocentricEclipticCoordinates(t) // (AEarthData() as VsopData).getEclipticCoordinates(t)
+        @Heliocentric @Ecliptic var earthEcliptic = SwissBody.Earth(Precession.Williams1994(t)).getHeliocentricEclipticCoordinates(t) // (AEarthData() as VsopData).getEclipticCoordinates(t)
 //        @Heliocentric @Ecliptic var objEcliptic = (AMercuryData() as VsopData).getEclipticCoordinates(t)
-        @Heliocentric @Ecliptic var objEcliptic = SwissObject.VENUS().getHeliocentricEclipticCoordinates(t)
+        @Heliocentric @Ecliptic var objEcliptic = SwissBody.Venus().getHeliocentricEclipticCoordinates(t)
         @Geocentric @Ecliptic var objGeoEcliptic: Vector = objEcliptic - earthEcliptic
         val dT = objGeoEcliptic.normalize() / C_Light / 36525.0
 //        objEcliptic = (AMercuryData() as VsopData).getEclipticCoordinates(t - dT)
-        objEcliptic = SwissObject.VENUS().getHeliocentricEclipticCoordinates(t - dT)
+        objEcliptic = SwissBody.Venus().getHeliocentricEclipticCoordinates(t - dT)
         objGeoEcliptic = objEcliptic - earthEcliptic
 
 
-        val precession = Precession.LASKAR_1986(t)
+        val precession = Precession.Laskar1986(t)
         val obliquity = if (precession.isEcliptic) precession.getNearestObliquityModel() else precession.getNearestObliquityModel(0.0)
         val nutation = precession.getNearsetNutationModel(obliquity)
 
@@ -94,8 +94,8 @@ class RiseSetCalculatorTest {
         val lightTime = dT * 36525.0
 
 
-        val orbit = KeplerObjectJPL.Venus(t).getOrbitalPlane()
-        val eOrbit = KeplerObjectJPL.EarthMoonBarycenter(t).getOrbitalPlane()
+        val orbit = KeplerBodyJPL.Venus(t).getOrbitalPlane()
+        val eOrbit = KeplerBodyJPL.EarthMoonBarycenter(t).getOrbitalPlane()
 
         //       objGeoEcliptic = objGeoEcliptic - (orbit.velocity - eOrbit.velocity).times(dT * 36525.0)
 
@@ -108,9 +108,15 @@ class RiseSetCalculatorTest {
 
         vectorAltA = nutation.applyNutationToGeocentricVector(vectorAltA)
 
+        val positionCalc = PositionCalculator(
+                Precession.Williams1994(t),
+                SwissBody.Earth(Precession.Williams1994(t)).getHeliocentricEclipticCoordinates)
+
+        val vectorAltB = positionCalc.getMoon(t, SwissBody.Moon(Precession.Williams1994(t)).getHeliocentricEclipticCoordinates)
+
         //   System.out.println("e= " + epsilon.toString())
-        System.out.println("Alt J2000 " + printLong(vectorAltA))
-        System.out.println("Alt J2000 " + printLat(vectorAltA))
+        System.out.println("Alt J2000 " + printLong(vectorAltB))
+        System.out.println("Alt J2000 " + printLat(vectorAltB))
 
         var vectorA = positionA.getGeocentricEquatorialPosition(t, AVenusData() as VsopData)
         vectorA = net.arwix.astronomy.ephem.Precession.precessFromJ2000(t, vectorA)

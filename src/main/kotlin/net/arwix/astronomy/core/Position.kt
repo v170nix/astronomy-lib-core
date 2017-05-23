@@ -72,7 +72,6 @@ open class Position(private val earthEclipticCoordinates: EclipticCoordinates<*>
                 return AstronomyMatrix.createTransformationCoordinates(T_J2000, ECLIPTIC, EQUATORIAL) * objGeoEcliptic
             }
         }
-
     }
 
     private fun getData(T: Double, coordinates: EclipticCoordinates<*>): Vector {

@@ -33,7 +33,7 @@ sealed class Precession(val t: Double) : PrecessionTransformation {
      * @param t Julian centuries of input vector (equatorial).
      * @return PrecessionTransformation referred to mean equinox and equator of JD.
      */
-    @Equatorial class VONDRAK_2011(t: Double) : Precession(t), PrecessionTransformation by Impl(false, VonrakMatrix.getMatrix(t))
+    @Equatorial class Vondrak2011(t: Double) : Precession(t), PrecessionTransformation by Impl(false, VonrakMatrix.getMatrix(t))
 
     /**
      * Same as IAU2006, but planetary rotation models are those recommended by
@@ -42,7 +42,7 @@ sealed class Precession(val t: Double) : PrecessionTransformation {
      * @param t Julian centuries of input vector (equatorial).
      * @return PrecessionTransformation referred to mean equinox and equator of JD.
      */
-    @Equatorial class IAU_2009(t: Double) : Precession(t), PrecessionTransformation by Impl(false, getIAU2006Matrix(t))
+    @Equatorial class IAU2009(t: Double) : Precession(t), PrecessionTransformation by Impl(false, getIAU2006Matrix(t))
 
     /**
      * Precession following Capitaine et al. 2003.
@@ -57,7 +57,7 @@ sealed class Precession(val t: Double) : PrecessionTransformation {
      * @param t Julian centuries of input vector (equatorial).
      * @return PrecessionTransformation referred to mean equinox and equator of JD.
      */
-    @Equatorial class IAU_2006(t: Double) : Precession(t), PrecessionTransformation by Impl(false, getIAU2006Matrix(t))
+    @Equatorial class IAU2006(t: Double) : Precession(t), PrecessionTransformation by Impl(false, getIAU2006Matrix(t))
 
     /**
      * Precession following IAU2000 definitions. From SOFA software library.
@@ -67,7 +67,7 @@ sealed class Precession(val t: Double) : PrecessionTransformation {
      * @param t Julian centuries of input vector (equatorial).
      * @return PrecessionTransformation referred to mean equinox and equator of JD.
      */
-    @Equatorial class IAU_2000(t: Double) : Precession(t), PrecessionTransformation by Impl(false, getIAU2000Matrix(t, true), getIAU2000Matrix(t, false))
+    @Equatorial class IAU2000(t: Double) : Precession(t), PrecessionTransformation by Impl(false, getIAU2000Matrix(t, true), getIAU2000Matrix(t, false))
 
     /**
      * Precession for selecting JPL DE403/404/405/406 formulae for precession,
@@ -78,16 +78,7 @@ sealed class Precession(val t: Double) : PrecessionTransformation {
      * @param t Julian centuries of input vector (ecliptic).
      * @return PrecessionTransformation referred to mean equinox and ecliptic of JD.
      */
-    @Ecliptic class JPL_DE4xx(val tt: Double) : Precession(tt), PrecessionTransformation by Impl(true, getEclipticMatrix(JPL_DE4xx_Matrices, tt)) {
-
-        fun getD(): DoubleArray {
-            val list: Array<DoubleArray> = JPL_DE4xx_Matrices
-            val T10 = tt / 10.0 /* thousands of years */
-            val pA = list[0].fold(0.0, { acc, d -> acc * T10 + d }) * ARCSEC_TO_RAD * T10
-            val W = list[1].fold(0.0, { acc, d -> acc * T10 + d })
-            val z = list[2].fold(0.0, { acc, d -> acc * T10 + d })
-            return doubleArrayOf(pA, W, z)
-        }
+    @Ecliptic class DE4xx(val tt: Double) : Precession(tt), PrecessionTransformation by Impl(true, getEclipticMatrix(JPL_DE4xx_Matrices, tt)) {
 
     }
 
@@ -102,7 +93,7 @@ sealed class Precession(val t: Double) : PrecessionTransformation {
      * @param t Julian centuries of input vector (ecliptic).
      * @return PrecessionTransformation referred to mean equinox and ecliptic of JD.
      */
-    @Ecliptic class SIMON_1994(t: Double) : Precession(t), PrecessionTransformation by Impl(true, getEclipticMatrix(SIMON_1994_Matrices, t))
+    @Ecliptic class Simon1994(t: Double) : Precession(t), PrecessionTransformation by Impl(true, getEclipticMatrix(SIMON_1994_Matrices, t))
 
     /**
      * Precession for selecting Williams formulae of precession (DE403 JPL
@@ -114,7 +105,7 @@ sealed class Precession(val t: Double) : PrecessionTransformation {
      * @param t Julian centuries of input vector (ecliptic).
      * @return PrecessionTransformation referred to mean equinox and ecliptic of JD.
      */
-    @Ecliptic class WILLIAMS_1994(t: Double) : Precession(t), PrecessionTransformation by Impl(true, getEclipticMatrix(WILLIAMS_1994_Matrices, t))
+    @Ecliptic class Williams1994(t: Double) : Precession(t), PrecessionTransformation by Impl(true, getEclipticMatrix(WILLIAMS_1994_Matrices, t))
 
     /**
      * Precession for selecting Laskar formulae of precession, nutation (IAU
@@ -125,7 +116,7 @@ sealed class Precession(val t: Double) : PrecessionTransformation {
      * @param t Julian centuries of input vector (ecliptic).
      * @return PrecessionTransformation referred to mean equinox and ecliptic of JD.
      */
-    @Ecliptic class LASKAR_1986(t: Double) : Precession(t), PrecessionTransformation by Impl(true, getEclipticMatrix(LASKAR_1986_Matrices, t))
+    @Ecliptic class Laskar1986(t: Double) : Precession(t), PrecessionTransformation by Impl(true, getEclipticMatrix(LASKAR_1986_Matrices, t))
 
     /**
      * Precession for selecting IAU 1976 formulae of precession, nutation (IAU
@@ -139,32 +130,32 @@ sealed class Precession(val t: Double) : PrecessionTransformation {
      * @param t Julian centuries of input vector (ecliptic).
      * @return PrecessionTransformation referred to mean equinox and ecliptic of JD.
      */
-    @Ecliptic class IAU_1976(t: Double) : Precession(t), PrecessionTransformation by Impl(true, getEclipticMatrix(IAU_1976_Matrices, t))
+    @Ecliptic class IAU1976(t: Double) : Precession(t), PrecessionTransformation by Impl(true, getEclipticMatrix(IAU_1976_Matrices, t))
 
 
     fun getNearestObliquityModel(t: Double = this.t) =
             when (this) {
-                is Precession.VONDRAK_2011 -> Obliquity.VONDRAK_2011(t)
-                is Precession.IAU_2009,
-                is Precession.IAU_2006,
-                is Precession.IAU_2000 -> Obliquity.IAU_2006(t)
-                is Precession.WILLIAMS_1994,
-                is Precession.JPL_DE4xx -> Obliquity.WILLIAMS_1994(t)
-                is Precession.SIMON_1994 -> Obliquity.SIMON_1994(t)
-                is Precession.LASKAR_1986 -> Obliquity.LASKAR_1996(t)
-                is Precession.IAU_1976 -> Obliquity.IAU_1976(t)
+                is Precession.Vondrak2011 -> Obliquity.Vondrak2011(t)
+                is Precession.IAU2009,
+                is Precession.IAU2006,
+                is Precession.IAU2000 -> Obliquity.IAU2006(t)
+                is Precession.Williams1994,
+                is Precession.DE4xx -> Obliquity.Williams1994(t)
+                is Precession.Simon1994 -> Obliquity.Simon1994(t)
+                is Precession.Laskar1986 -> Obliquity.Laskar1996(t)
+                is Precession.IAU1976 -> Obliquity.IAU1976(t)
 
             }
 
     fun getNearsetNutationModel(obliquity: Obliquity, t: Double = this.t) = when (this) {
-        is Precession.IAU_2009,
-        is Precession.IAU_2006 -> Nutation.IAU_2006(t, obliquity)
-        is Precession.WILLIAMS_1994,
-        is Precession.JPL_DE4xx,
-        is Precession.SIMON_1994,
-        is Precession.LASKAR_1986,
-        is Precession.IAU_1976 -> Nutation.IAU_1980(t, obliquity)
-        else -> Nutation.IAU_2000(t, obliquity)
+        is Precession.IAU2009,
+        is Precession.IAU2006 -> Nutation.IAU2006(t, obliquity)
+        is Precession.Williams1994,
+        is Precession.DE4xx,
+        is Precession.Simon1994,
+        is Precession.Laskar1986,
+        is Precession.IAU1976 -> Nutation.IAU1980(t, obliquity)
+        else -> Nutation.IAU2000(t, obliquity)
     }
 
 }

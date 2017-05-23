@@ -25,9 +25,9 @@ import java.lang.Math.cos
 import java.lang.Math.sin
 
 fun Double.deg() = this * ARCSEC_TO_DEG
-sealed class KeplerObjectSimonJ2000 : KeplerElements {
+sealed class KeplerBodySimonJ2000 : KeplerElements {
 
-    class Mercury(override val T: Double) : KeplerObjectSimonJ2000(),
+    class Mercury(override val T: Double) : KeplerBodySimonJ2000(),
             KeplerElements by ImplKeplerElements(T / 10, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
         companion object {
             private val aCoefficients = doubleArrayOf(0.3870983098)
@@ -39,7 +39,7 @@ sealed class KeplerObjectSimonJ2000 : KeplerElements {
         }
     }
 
-    class Venus(override val T: Double) : KeplerObjectSimonJ2000(),
+    class Venus(override val T: Double) : KeplerBodySimonJ2000(),
             KeplerElements by ImplKeplerElements(T / 10, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
         companion object {
             private val aCoefficients = doubleArrayOf(0.7233298200)
@@ -51,7 +51,7 @@ sealed class KeplerObjectSimonJ2000 : KeplerElements {
         }
     }
 
-    class Earth(override val T: Double) : KeplerObjectSimonJ2000(),
+    class Earth(override val T: Double) : KeplerBodySimonJ2000(),
             KeplerElements by ImplKeplerElements(T / 10, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
         companion object {
             private val aCoefficients = doubleArrayOf(1.0000010178)
@@ -63,7 +63,7 @@ sealed class KeplerObjectSimonJ2000 : KeplerElements {
         }
     }
 
-    class Mars(override val T: Double) : KeplerObjectSimonJ2000(),
+    class Mars(override val T: Double) : KeplerBodySimonJ2000(),
             KeplerElements by ImplKeplerElements(T / 10, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
         companion object {
             private val aCoefficients = doubleArrayOf(1.5236793419, 3e-10)
@@ -75,7 +75,7 @@ sealed class KeplerObjectSimonJ2000 : KeplerElements {
         }
     }
 
-    class Jupiter(override val T: Double) : KeplerObjectSimonJ2000(),
+    class Jupiter(override val T: Double) : KeplerBodySimonJ2000(),
             KeplerElements by ImplKeplerElements(T / 10, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
         companion object {
             private val aCoefficients = doubleArrayOf(5.2026032092, 19132e-10, -39e-10, -60e-10, -10e-10, 1e-10)
@@ -87,7 +87,7 @@ sealed class KeplerObjectSimonJ2000 : KeplerElements {
         }
     }
 
-    class Saturn(override val T: Double) : KeplerObjectSimonJ2000(),
+    class Saturn(override val T: Double) : KeplerBodySimonJ2000(),
             KeplerElements by ImplKeplerElements(T / 10, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
         companion object {
             private val aCoefficients = doubleArrayOf(9.5549091915, -0.0000213896, 444e-10, 670e-10, 110e-10, -7e-10, -1e-10)
@@ -99,7 +99,7 @@ sealed class KeplerObjectSimonJ2000 : KeplerElements {
         }
     }
 
-    class Uranus(override val T: Double) : KeplerObjectSimonJ2000(),
+    class Uranus(override val T: Double) : KeplerBodySimonJ2000(),
             KeplerElements by ImplKeplerElements(T / 10, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
         companion object {
             private val aCoefficients = doubleArrayOf(19.2184460618, -3716e-10, 979e-10)
@@ -111,7 +111,7 @@ sealed class KeplerObjectSimonJ2000 : KeplerElements {
         }
     }
 
-    class Neptune(override val T: Double) : KeplerObjectSimonJ2000(),
+    class Neptune(override val T: Double) : KeplerBodySimonJ2000(),
             KeplerElements by ImplKeplerElements(T / 10, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
         companion object {
             private val aCoefficients = doubleArrayOf(30.1103868694, -16635e-10, 686e-10)
@@ -128,12 +128,12 @@ sealed class KeplerObjectSimonJ2000 : KeplerElements {
  * Keplerian elements and their rates, with respect to the mean ecliptic and equinox of J2000,
  * valid for the time-interval 3000 BC -- 3000 AD.
  */
-sealed class KeplerObjectJPL : KeplerElements {
+sealed class KeplerBodyJPL : KeplerElements {
 
     //https://ssd.jpl.nasa.gov/?planets#ephem
     //https://ssd.jpl.nasa.gov/txt/p_elem_t2.txt
     //https://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf
-    class Mercury(override val T: Double) : KeplerObjectJPL(),
+    class Mercury(override val T: Double) : KeplerBodyJPL(),
             KeplerElements by ImplKeplerElements(T, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
         companion object {
             private val aCoefficients = doubleArrayOf(0.38709843)
@@ -145,7 +145,7 @@ sealed class KeplerObjectJPL : KeplerElements {
         }
     }
 
-    class Venus(override val T: Double) : KeplerObjectJPL(),
+    class Venus(override val T: Double) : KeplerBodyJPL(),
             KeplerElements by ImplKeplerElements(T, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
         companion object {
             private val aCoefficients = doubleArrayOf(0.72332102, -0.00000026)
@@ -157,7 +157,7 @@ sealed class KeplerObjectJPL : KeplerElements {
         }
     }
 
-    class EarthMoonBarycenter(override val T: Double) : KeplerObjectJPL(),
+    class EarthMoonBarycenter(override val T: Double) : KeplerBodyJPL(),
             KeplerElements by ImplKeplerElements(T, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
         companion object {
             private val aCoefficients = doubleArrayOf(1.00000018, -0.00000003)
@@ -169,7 +169,7 @@ sealed class KeplerObjectJPL : KeplerElements {
         }
     }
 
-    class Mars(override val T: Double) : KeplerObjectJPL(),
+    class Mars(override val T: Double) : KeplerBodyJPL(),
             KeplerElements by ImplKeplerElements(T, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
         companion object {
             private val aCoefficients = doubleArrayOf(1.52371243, 0.00000097)
@@ -181,7 +181,7 @@ sealed class KeplerObjectJPL : KeplerElements {
         }
     }
 
-    class Jupiter(override val T: Double) : KeplerObjectJPL(),
+    class Jupiter(override val T: Double) : KeplerBodyJPL(),
             KeplerElements by ImplKeplerElements(T, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
 
         companion object {
@@ -199,7 +199,7 @@ sealed class KeplerObjectJPL : KeplerElements {
         override fun getMeanAnomaly() = Longitude - perihelionLongitude - 0.00012452 * T * T + c * cos(f * T) + s * sin(f * T)
     }
 
-    class Saturn(override val T: Double) : KeplerObjectJPL(),
+    class Saturn(override val T: Double) : KeplerBodyJPL(),
             KeplerElements by ImplKeplerElements(T, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
 
         companion object {
@@ -217,7 +217,7 @@ sealed class KeplerObjectJPL : KeplerElements {
         override fun getMeanAnomaly() = Longitude - perihelionLongitude + 0.00025899 * T * T + c * cos(f * T) + s * sin(f * T)
     }
 
-    class Uranus(override val T: Double) : KeplerObjectJPL(),
+    class Uranus(override val T: Double) : KeplerBodyJPL(),
             KeplerElements by ImplKeplerElements(T, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
 
         companion object {
@@ -235,7 +235,7 @@ sealed class KeplerObjectJPL : KeplerElements {
         override fun getMeanAnomaly() = Longitude - perihelionLongitude + 0.00058331 * T * T + c * cos(f * T) + s * sin(f * T)
     }
 
-    class Neptune(override val T: Double) : KeplerObjectJPL(),
+    class Neptune(override val T: Double) : KeplerBodyJPL(),
             KeplerElements by ImplKeplerElements(T, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
 
         companion object {
@@ -253,7 +253,7 @@ sealed class KeplerObjectJPL : KeplerElements {
         override fun getMeanAnomaly() = Longitude - perihelionLongitude - 0.00041348 * T * T + c * cos(f * T) + s * sin(f * T)
     }
 
-    class Pluto(override val T: Double) : KeplerObjectJPL(),
+    class Pluto(override val T: Double) : KeplerBodyJPL(),
             KeplerElements by ImplKeplerElements(T, aCoefficients, eCoefficients, iCoefficients, LCoefficients, WCoefficients, OCoefficients) {
 
         companion object {
@@ -305,7 +305,7 @@ interface KeplerElements {
         val p = EarthMoonElements(T).precession
         val M = getMeanAnomaly()
         return EllipticOrbit.getOrbitalPlane(GM_Sun, M, a, e).let {
-            val PQR = KeplerianOrbit.createGaussianMatrix(ascendingNodeLongitude + p, inclination, perihelionLongitude - ascendingNodeLongitude)
+            val PQR = KeplerOrbit.createGaussianMatrix(ascendingNodeLongitude + p, inclination, perihelionLongitude - ascendingNodeLongitude)
             OrbitalPlane(PQR * it.position, PQR * it.velocity)
         }
     }

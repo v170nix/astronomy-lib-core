@@ -18,7 +18,7 @@ package net.arwix.astronomy.core.kepler
 
 import net.arwix.astronomy.core.vector.Matrix
 
-object KeplerianOrbit {
+object KeplerOrbit {
 //------------------------------------------------------------------------------
 //
 // GaussVec: computes the transformation matrix from the orbital plane

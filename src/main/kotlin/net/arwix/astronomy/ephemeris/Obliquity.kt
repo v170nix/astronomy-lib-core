@@ -29,12 +29,12 @@ import java.lang.Math.cos
 import java.lang.Math.sin
 
 sealed class Obliquity(val t: Double) : ObliquityTransformation {
-    class WILLIAMS_1994(t: Double) : Obliquity(t), ObliquityTransformation by ImplObliquityTransform(getEps(t, rvalStart_WIL, coeffs_WIL))
-    class SIMON_1994(t: Double) : Obliquity(t), ObliquityTransformation by ImplObliquityTransform(getEps(t, rvalStart_SIM, coeffs_SIM))
-    class LASKAR_1996(t: Double) : Obliquity(t), ObliquityTransformation by ImplObliquityTransform(getEps(t, rvalStart_LAS, coeffs_LAS))
-    class IAU_1976(t: Double) : Obliquity(t), ObliquityTransformation by ImplObliquityTransform(getEps(t, rvalStart_IAU, coeffs_IAU))
-    class IAU_2006(t: Double) : Obliquity(t), ObliquityTransformation by ImplObliquityTransform(getEps(t, rvalStart_CAP, coeffs_CAP))
-    class VONDRAK_2011(t: Double) : Obliquity(t), ObliquityTransformation by ImplObliquityTransform(getVondrakEps(t))
+    class Williams1994(t: Double) : Obliquity(t), ObliquityTransformation by ImplObliquityTransform(getEps(t, rvalStart_WIL, coeffs_WIL))
+    class Simon1994(t: Double) : Obliquity(t), ObliquityTransformation by ImplObliquityTransform(getEps(t, rvalStart_SIM, coeffs_SIM))
+    class Laskar1996(t: Double) : Obliquity(t), ObliquityTransformation by ImplObliquityTransform(getEps(t, rvalStart_LAS, coeffs_LAS))
+    class IAU1976(t: Double) : Obliquity(t), ObliquityTransformation by ImplObliquityTransform(getEps(t, rvalStart_IAU, coeffs_IAU))
+    class IAU2006(t: Double) : Obliquity(t), ObliquityTransformation by ImplObliquityTransform(getEps(t, rvalStart_CAP, coeffs_CAP))
+    class Vondrak2011(t: Double) : Obliquity(t), ObliquityTransformation by ImplObliquityTransform(getVondrakEps(t))
 }
 
 interface ObliquityTransformation {

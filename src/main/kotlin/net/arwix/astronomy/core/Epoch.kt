@@ -16,5 +16,5 @@
 
 package net.arwix.astronomy.core
 
-
+@Deprecated("old")
 enum class Epoch { APPARENT, J2000 }

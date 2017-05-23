@@ -19,7 +19,7 @@ package net.arwix.astronomy.swiss
 import net.arwix.astronomy.core.ARCSEC_TO_RAD
 import net.arwix.astronomy.core.JULIAN_DAYS_PER_CENTURY
 import net.arwix.astronomy.core.kepler.EarthMoonElements
-import net.arwix.astronomy.core.kepler.KeplerObjectSimonJ2000
+import net.arwix.astronomy.core.kepler.KeplerBodySimonJ2000
 import net.arwix.astronomy.core.vector.RectangularVector
 import net.arwix.astronomy.core.vector.SphericalVector
 import net.arwix.astronomy.core.vector.Vector
@@ -356,14 +356,14 @@ private fun meanElements(T: Double): DoubleArray {
 
     val delta = -.047 * ARCSEC_TO_RAD
 
-    Args[0] = KeplerObjectSimonJ2000.Mercury(T).Longitude + delta
-    Args[1] = KeplerObjectSimonJ2000.Venus(T).Longitude + delta
-    Args[2] = KeplerObjectSimonJ2000.Earth(T).Longitude + delta
-    Args[3] = KeplerObjectSimonJ2000.Mars(T).Longitude + delta
-    Args[4] = KeplerObjectSimonJ2000.Jupiter(T).Longitude + delta
-    Args[5] = KeplerObjectSimonJ2000.Saturn(T).Longitude + delta
-    Args[6] = KeplerObjectSimonJ2000.Uranus(T).Longitude + delta
-    Args[7] = KeplerObjectSimonJ2000.Neptune(T).Longitude + delta
+    Args[0] = KeplerBodySimonJ2000.Mercury(T).Longitude + delta
+    Args[1] = KeplerBodySimonJ2000.Venus(T).Longitude + delta
+    Args[2] = KeplerBodySimonJ2000.Earth(T).Longitude + delta
+    Args[3] = KeplerBodySimonJ2000.Mars(T).Longitude + delta
+    Args[4] = KeplerBodySimonJ2000.Jupiter(T).Longitude + delta
+    Args[5] = KeplerBodySimonJ2000.Saturn(T).Longitude + delta
+    Args[6] = KeplerBodySimonJ2000.Uranus(T).Longitude + delta
+    Args[7] = KeplerBodySimonJ2000.Neptune(T).Longitude + delta
 
     /* Copied from cmoon.c, DE404 version. */
     /* Mean elongation of moon = elongation */

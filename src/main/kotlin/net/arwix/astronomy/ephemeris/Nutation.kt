@@ -26,14 +26,14 @@ import java.lang.Math.*
 
 sealed class Nutation(val t: Double) : NutationTransformation {
 
-    class IAU_1980(t: Double, obliquity: Obliquity) : Nutation(t), NutationTransformation by ImplNutationTransform(calcNutation_IAU1980(t), obliquity.meanEps)
-    class IAU_2000(t: Double, obliquity: Obliquity) : Nutation(t), NutationTransformation by ImplNutationTransform(calcNutation_IAU2000(t), obliquity.meanEps)
+    class IAU1980(t: Double, obliquity: Obliquity) : Nutation(t), NutationTransformation by ImplNutationTransform(calcNutation_IAU1980(t), obliquity.meanEps)
+    class IAU2000(t: Double, obliquity: Obliquity) : Nutation(t), NutationTransformation by ImplNutationTransform(calcNutation_IAU2000(t), obliquity.meanEps)
     // Apply precession adjustments, see Wallace & Capitaine, 2006, Eqs.5
-    class IAU_2006(t: Double, obliquity: Obliquity) : Nutation(t), NutationTransformation by ImplNutationTransform(calcNutation_IAU2000(t).let {
+    class IAU2006(t: Double, obliquity: Obliquity) : Nutation(t), NutationTransformation by ImplNutationTransform(calcNutation_IAU2000(t).let {
         NutationResult(it.longitude * (1.0 + (0.4697E-6 - 2.7774E-6 * t)), it.obliquity * (1.0 + (2.7774E-6 * t)))
     }, obliquity.meanEps)
 
-    class FAST(t: Double, obliquity: Obliquity) : Nutation(t), NutationTransformation by ImplNutationTransform(getFastNutation(t), obliquity.meanEps)
+    class Fast(t: Double, obliquity: Obliquity) : Nutation(t), NutationTransformation by ImplNutationTransform(getFastNutation(t), obliquity.meanEps)
 }
 
 internal data class NutationResult(val longitude: Double, val obliquity: Double)
