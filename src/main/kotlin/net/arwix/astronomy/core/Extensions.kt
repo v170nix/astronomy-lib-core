@@ -16,6 +16,10 @@
 
 package net.arwix.astronomy.core
 
+inline fun <T> T.letIf(b: Boolean, block: (T) -> T): T {
+    return if (b) block(this) else this
+}
+
 fun frac(x: Double): Double {
     return x - Math.floor(x)
 }

@@ -24,65 +24,82 @@ import net.arwix.astronomy.core.C_Light
 import net.arwix.astronomy.core.JULIAN_DAYS_PER_CENTURY
 import net.arwix.astronomy.core.coordinates.FunGetGeocentricEclipticCoordinates
 import net.arwix.astronomy.core.coordinates.FunGetHeliocentricEclipticCoordinates
-import net.arwix.astronomy.core.kepler.KeplerBodyJPL
+import net.arwix.astronomy.core.kepler.KeplerBodySimonJ2000
+import net.arwix.astronomy.core.kepler.KeplerElements
+import net.arwix.astronomy.core.letIf
 import net.arwix.astronomy.core.vector.RectangularVector
 import net.arwix.astronomy.core.vector.Vector
-import net.arwix.astronomy.core.vector.VectorType
 import net.arwix.astronomy.ephemeris.Precession
+
 
 @Geocentric @Equatorial
 class PositionCalculator(
         val precession: Precession,
-        @Heliocentric @Ecliptic
-        private val getEarthHelioEclipticCoordinatesJ2000: FunGetHeliocentricEclipticCoordinates) {
+        @Heliocentric @Ecliptic val getEarthCoordinatesJ2000: FunGetHeliocentricEclipticCoordinates) {
 
     val obliquity = if (precession.isEcliptic) precession.getNearestObliquityModel() else precession.getNearestObliquityModel(0.0)
     val nutation = precession.getNearsetNutationModel(obliquity)
 
+    /**
+     * @param lightTime in days
+     */
+    @Geocentric @Ecliptic
+    private fun getGeoPositionJ2000(T: Double, request: Request, lightTime: Double = 0.0): Vector {
+        val dT = lightTime / JULIAN_DAYS_PER_CENTURY
+        return when (request) {
+            is Request.GeocentricEclipticBody -> request.getCoordinates(T - dT)
+            is Request.HeliocentricEclipticBody -> {
+                val body = request.getCoordinates(T - dT)
+                val earth = getEarthCoordinatesJ2000(T)
+                body - earth
+            }
+        }
+    }
+
+    @Heliocentric @Ecliptic
+    fun getHeliocentricEclipticPositionJ2000(T: Double, request: Request) = when (request) {
+        is Request.HeliocentricEclipticBody -> request.getCoordinates(T)
+        is Request.GeocentricEclipticBody -> getEarthCoordinatesJ2000(T) + request.getCoordinates(T)
+    }
+
+
+    @Heliocentric @Ecliptic
+    fun getBodyVelocity(T: Double, request: Request): Vector {
+        val body = getHeliocentricEclipticPositionJ2000(T, request)
+        val bodyPlus = getHeliocentricEclipticPositionJ2000(T + 0.01 / JULIAN_DAYS_PER_CENTURY, request)
+        // скорость объекта
+        return (bodyPlus - body) / .01
+    }
+
+    @Heliocentric @Ecliptic
+    fun getEarthVelocity(T: Double): Vector {
+        val earth = getEarthCoordinatesJ2000(T)
+        val earthPlus = getEarthCoordinatesJ2000(T + 0.01 / JULIAN_DAYS_PER_CENTURY)
+        //скорость Земли
+        return (earthPlus - earth) / .01
+    }
+
 
     @Geocentric @Equatorial
-    fun getApparentGeocentricEquatorialPosition(T: Double, getHelioEclipticCoordinatesJ2000: FunGetHeliocentricEclipticCoordinates): Vector {
-        @Heliocentric @Ecliptic val earthPosition = getEarthHelioEclipticCoordinatesJ2000(T)
-        @Heliocentric @Ecliptic var bodyPosition = getHelioEclipticCoordinatesJ2000(T)
-        @Geocentric @Ecliptic var bodyGeoPosition: Vector = bodyPosition - earthPosition
-        val lightTime = bodyGeoPosition.normalize() / C_Light
+    fun getGeocentricEquatorialPositionApparent(T: Double, request: Request): Vector {
+        val bodyGeo = getGeoPositionJ2000(T, request, 0.0)
+        val lightTime = bodyGeo.normalize() / C_Light
+        val bodyElements = if (request is Request.HeliocentricEclipticBody && request.keplerElements != null) request.keplerElements else null
+        val earthVelocity = KeplerBodySimonJ2000.Earth(T).getOrbitalPlane().velocity
+        val bodyVelocity = bodyElements?.getOrbitalPlane()?.velocity ?: getBodyVelocity(T, request)
 
-        bodyPosition = getHelioEclipticCoordinatesJ2000(T - lightTime / JULIAN_DAYS_PER_CENTURY)
-        bodyGeoPosition = bodyPosition - earthPosition
-
-        if (precession.isEcliptic) bodyGeoPosition = precession.transformFromJ2000(bodyGeoPosition)
-        val eOrbit = KeplerBodyJPL.EarthMoonBarycenter(T).getOrbitalPlane()
-        bodyGeoPosition = aberration(bodyGeoPosition.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector, eOrbit.velocity as RectangularVector, lightTime)
-
-        @Geocentric @Equatorial var bodyGeoEquPosition = obliquity.rotateFromEclipticToEquatorial(bodyGeoPosition)
-
-        if (!precession.isEcliptic) bodyGeoEquPosition = precession.transformFromJ2000(bodyGeoEquPosition)
-
-        bodyGeoEquPosition = nutation.applyNutationToGeocentricVector(bodyGeoEquPosition)
-
-        return bodyGeoEquPosition
+        return (bodyGeo - (bodyVelocity - earthVelocity) * lightTime) // (aberration(bodyGeo.position.toType(), getEarthVelocity(T).toType(), lightTime))
+                .letIf(precession.isEcliptic, precession::transformFromJ2000)
+                .let(obliquity::rotateFromEclipticToEquatorial)
+                .letIf(!precession.isEcliptic, precession::transformFromJ2000)
+                .let(nutation::applyNutationToGeocentricVector)
     }
 
-    fun getMoon(T: Double, getGeocentricEclipticCoordinates: FunGetGeocentricEclipticCoordinates): Vector {
-        @Geocentric @Ecliptic var bodyGeoPosition = getGeocentricEclipticCoordinates(T)
-        val lightTime = bodyGeoPosition.normalize() / C_Light
-
-        bodyGeoPosition = getGeocentricEclipticCoordinates(T - lightTime / JULIAN_DAYS_PER_CENTURY)
-
-        if (precession.isEcliptic) bodyGeoPosition = precession.transformFromJ2000(bodyGeoPosition)
-        val eOrbit = KeplerBodyJPL.EarthMoonBarycenter(T).getOrbitalPlane()
-        //     bodyGeoPosition = aberration(bodyGeoPosition.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector, eOrbit.velocity as RectangularVector, lightTime)
-
-        @Geocentric @Equatorial var bodyGeoEquPosition = obliquity.rotateFromEclipticToEquatorial(bodyGeoPosition)
-
-        if (!precession.isEcliptic) bodyGeoEquPosition = precession.transformFromJ2000(bodyGeoEquPosition)
-
-        bodyGeoEquPosition = nutation.applyNutationToGeocentricVector(bodyGeoEquPosition)
-
-        return bodyGeoEquPosition
-    }
-
-    fun aberration(pObject: RectangularVector, vearth: RectangularVector, light_time: Double): RectangularVector {
+    /**
+     * @param light_time in days
+     */
+    @Deprecated("old function")
+    private fun aberration(pObject: RectangularVector, vearth: RectangularVector, light_time: Double): RectangularVector {
         if (light_time <= 0) return pObject
 
         //    val vearth = doubleArrayOf(earth[3], earth[4], earth[5])
@@ -105,6 +122,17 @@ class PositionCalculator(
         }
 
         return RectangularVector(p[0], p[1], p[2])
+    }
+
+    @Ecliptic
+    sealed class Request {
+        @Heliocentric @Ecliptic
+        data class HeliocentricEclipticBody(
+                val getCoordinates: FunGetHeliocentricEclipticCoordinates,
+                val keplerElements: KeplerElements? = null) : Request()
+
+        @Geocentric @Ecliptic
+        data class GeocentricEclipticBody(val getCoordinates: FunGetGeocentricEclipticCoordinates) : Request()
     }
 
 

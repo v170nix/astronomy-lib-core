@@ -22,7 +22,6 @@ import net.arwix.astronomy.core.calendar.getGMST
 import net.arwix.astronomy.core.coordinates.Location
 import net.arwix.astronomy.core.vector.SphericalVector
 import net.arwix.astronomy.core.vector.Vector
-import net.arwix.astronomy.core.vector.VectorType
 import java.util.*
 
 
@@ -61,7 +60,7 @@ abstract class Calculator<T> {
      */
     protected fun getSinAltitude(MJD: Double, longitude: Double, cosLatitude: Double, sinLatitude: Double): Double {
         val T = (MJD - MJD_J2000 - deltaT) / 36525.0
-        val p = getCoordinates(T, Epoch.APPARENT).getVectorOfType(VectorType.SPHERICAL) as SphericalVector
+        val p: SphericalVector = getCoordinates(T, Epoch.APPARENT).toType()
         // часовой угол
         val tau = getGMST(MJD) + longitude - p.phi
         return sinLatitude * Math.sin(p.theta) + cosLatitude * Math.cos(p.theta) * Math.cos(tau)

@@ -23,7 +23,6 @@ import net.arwix.astronomy.core.kepler.KeplerBodySimonJ2000
 import net.arwix.astronomy.core.vector.RectangularVector
 import net.arwix.astronomy.core.vector.SphericalVector
 import net.arwix.astronomy.core.vector.Vector
-import net.arwix.astronomy.core.vector.VectorType
 import net.arwix.astronomy.math.mod3600
 import net.arwix.astronomy.math.radians.normalize
 
@@ -336,7 +335,7 @@ internal fun g2plan(tt: Double, arg_tbl: IntArray, distance: Double, lon_tbl: Do
     vector.theta = lat
     vector.r = distance * (1.0 + ARCSEC_TO_RAD * vector.r)
 
-    return vector.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector
+    return vector.toType<RectangularVector>()
 }
 
 

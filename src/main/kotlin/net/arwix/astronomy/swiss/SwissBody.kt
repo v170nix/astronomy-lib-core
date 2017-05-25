@@ -24,7 +24,6 @@ import net.arwix.astronomy.core.kepler.EarthMoonElements
 import net.arwix.astronomy.core.kepler.KeplerBodySimonJ2000
 import net.arwix.astronomy.core.vector.Matrix
 import net.arwix.astronomy.core.vector.RectangularVector
-import net.arwix.astronomy.core.vector.VectorType
 import net.arwix.astronomy.ephemeris.Precession
 import net.arwix.astronomy.physical.PhysicalBody
 
@@ -97,10 +96,10 @@ private class SwissEarthImpl(val precession: Precession.Williams1994) : Coordina
 }
 
 private class SwissMoonImpl(val precession: Precession.Williams1994) : Coordinates {
-    override val getGeocentricEclipticCoordinates: FunGetGeocentricEclipticCoordinates get() = TODO("not implemented")
+    override val getHeliocentricEclipticCoordinates: FunGetGeocentricEclipticCoordinates get() = TODO("not implemented")
     override val getGeocentricEquatorialCoordinates: FunGetGeocentricEclipticCoordinates get() = TODO("not implemented")
 
-    override val getHeliocentricEclipticCoordinates: FunGetHeliocentricEclipticCoordinates
+    override val getGeocentricEclipticCoordinates: FunGetHeliocentricEclipticCoordinates
         get() = { t ->
             val moon_lat = g1plan(t, MoonLatSwissData.args, MoonLatSwissData.tabl, MoonLatSwissData.max_harmonic, MoonLatSwissData.timescale)
             val vector = g2plan(t, MoonLonSwissData.args, MoonLonSwissData.distance,
@@ -121,11 +120,11 @@ private object SwissLibrationImpl : Coordinates {
 
     override val getHeliocentricEclipticCoordinates: FunGetHeliocentricEclipticCoordinates
         get() = { t ->
-            var p = g3plan(t, LibrationSwissData.args, LibrationSwissData.distance,
+            val p: RectangularVector = g3plan(t, LibrationSwissData.args, LibrationSwissData.distance,
                     LibrationSwissData.tabb, LibrationSwissData.tabl,
                     LibrationSwissData.tabr, LibrationSwissData.max_harmonic,
                     LibrationSwissData.max_power_of_t, LibrationSwissData.maxargs,
-                    LibrationSwissData.timescale, LibrationSwissData.trunclvl, true).getVectorOfType(VectorType.RECTANGULAR) as RectangularVector
+                    LibrationSwissData.timescale, LibrationSwissData.trunclvl, true).toType()
 
             p[0] -= KeplerBodySimonJ2000.Earth(t).Longitude - .047 * ARCSEC_TO_RAD
 

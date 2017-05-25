@@ -72,9 +72,10 @@ val JULIAN_DAYS_PER_CENTURY = 36525.0
 
 @JvmField val SECS_DAY = 86400.0 // колличество секунд в сутках
 
-@JvmField val kGauss = 0.01720209895  // гравитационная константа
-@JvmField val GM_Sun = kGauss * kGauss  // [AU^3/d^2]
+/** Earth orbit mean rate in rad/day (Gauss Gravitational constant). kGauss */
+@JvmField val EARTH_MEAN_ORBIT_RATE = 0.01720209895  // гравитационная константа
+@JvmField val GM_Sun = EARTH_MEAN_ORBIT_RATE * EARTH_MEAN_ORBIT_RATE  // [AU^3/d^2]
 
 @JvmField val AU = 149597870.7    // 1ае
 
-@JvmField val C_Light = 173.14         // скорость света [AU/d]
+@JvmField val C_Light = 173.144632685         // скорость света [AU/d]

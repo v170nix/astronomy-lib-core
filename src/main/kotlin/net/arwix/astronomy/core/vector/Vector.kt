@@ -23,7 +23,7 @@ abstract class Vector {
 
     companion object {
         internal fun convert(vector: Vector, toType: VectorType): Vector {
-            when(vector.getType()) {
+            when (vector.getType()) {
                 VectorType.SPHERICAL -> {
                     if (toType == VectorType.SPHERICAL) return SphericalVector(vector)
                     vector as SphericalVector
@@ -42,7 +42,7 @@ abstract class Vector {
                     // Модуль вектора
                     sphericalVector.r = sqrt(XYSqr + vector.z * vector.z)
                     // Азимут вектора
-                    sphericalVector.phi  = if (vector.x == 0.0 && vector.y == 0.0) 0.0 else atan2(vector.y, vector.x)
+                    sphericalVector.phi = if (vector.x == 0.0 && vector.y == 0.0) 0.0 else atan2(vector.y, vector.x)
                     if (sphericalVector.phi < 0.0) sphericalVector.phi += 2.0 * Math.PI
                     // высота вектора
                     val rho = sqrt(XYSqr)
@@ -59,8 +59,8 @@ abstract class Vector {
          * @return скалярное произведение
          */
         private fun dot(left: Vector, right: Vector): Double {
-            val v1 = left.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector
-            val v2 = right.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector
+            val v1 = left.toType<RectangularVector>()
+            val v2 = right.toType<RectangularVector>()
             return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z
         }
 
@@ -81,8 +81,8 @@ abstract class Vector {
          * @return новый вектор
          */
         private fun plus(left: Vector, right: Vector): RectangularVector {
-            val v1 = left.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector
-            val v2 = right.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector
+            val v1 = left.toType<RectangularVector>()
+            val v2 = right.toType<RectangularVector>()
             return RectangularVector(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z)
         }
 
@@ -93,8 +93,8 @@ abstract class Vector {
          * @return новый вектор
          */
         private fun minus(left: Vector, right: Vector): RectangularVector {
-            val v1 = left.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector
-            val v2 = right.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector
+            val v1 = left.toType<RectangularVector>()
+            val v2 = right.toType<RectangularVector>()
             return RectangularVector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z)
         }
 
@@ -105,7 +105,7 @@ abstract class Vector {
          * @return новый вектор
          */
         private fun scalarTimes(vector: Vector, scalar: Double): RectangularVector {
-            val v = vector.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector
+            val v = vector.toType<RectangularVector>()
             return RectangularVector(v.x * scalar, v.y * scalar, v.z * scalar)
         }
 
@@ -124,7 +124,7 @@ abstract class Vector {
          * @return новый вектор
          */
         private fun unaryMinus(vector: Vector): Vector {
-            val v = vector.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector
+            val v = vector.toType<RectangularVector>()
             return RectangularVector(-v.x, -v.y, -v.z)
         }
 
@@ -135,12 +135,12 @@ abstract class Vector {
          * @return новый объект
          */
         private fun multiply(left: Vector, right: Vector): RectangularVector {
-            val v1 = left.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector
-            val v2 = right.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector
+            val v1 = left.toType<RectangularVector>()
+            val v2 = right.toType<RectangularVector>()
             val r = RectangularVector(
-            v1.y * v2.z - v1.z * v2.y,
-            v1.z * v2.x - v1.x * v2.z,
-            v1.x * v2.y - v1.y * v2.x
+                    v1.y * v2.z - v1.z * v2.y,
+                    v1.z * v2.x - v1.x * v2.z,
+                    v1.x * v2.y - v1.y * v2.x
             )
             return r
         }
@@ -155,7 +155,44 @@ abstract class Vector {
 
     abstract operator fun get(index: Int): Double
 
-    fun  getVectorOfType(type: VectorType) = if (this.getType() == type) this else convert(this, type)
+    @Deprecated("use toType", ReplaceWith("getVectorOfType(type: VectorType)", "toType()"))
+    fun getVectorOfType(type: VectorType) = if (this.getType() == type) this else convert(this, type)
+
+    inline fun <reified T : Vector> toType(): T {
+        if (this is T) return this else {
+            when (this) {
+                is SphericalVector -> {
+                    val cosEl = Math.cos(theta)
+                    RectangularVector(
+                            r * cos(phi) * cosEl,
+                            r * sin(phi) * cosEl,
+                            r * sin(theta))
+                            .let {
+                                if (it is T) return it
+                                else throw Exception("Internal convert vector exception: ${T::class.java.canonicalName} is not RectangularVector")
+                            }
+                }
+                is RectangularVector -> {
+                    val sphericalVector = SphericalVector()
+                    // Длина проекции на плоскость XY
+                    val XYSqr = x * x + y * y
+                    // Модуль вектора
+                    sphericalVector.r = sqrt(XYSqr + z * z)
+                    // Азимут вектора
+                    sphericalVector.phi = if (x == 0.0 && y == 0.0) 0.0 else atan2(y, x)
+                    if (sphericalVector.phi < 0.0) sphericalVector.phi += 2.0 * Math.PI
+                    // высота вектора
+                    val rho = sqrt(XYSqr)
+                    sphericalVector.theta = if (z == 0.0 && rho == 0.0) 0.0 else atan2(z, rho)
+                    if (sphericalVector is T) return sphericalVector
+                    else throw Exception("Internal convert vector exception: ${T::class.java.canonicalName} is not SphericalVector")
+                }
+
+                else -> throw Exception("Internal convert vector exception: ${T::class.java.canonicalName} is unknown vector type")
+            }
+        }
+    }
+
 
     abstract operator fun set(i: Int, element: Double)
 

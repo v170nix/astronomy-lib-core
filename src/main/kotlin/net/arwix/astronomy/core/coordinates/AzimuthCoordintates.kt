@@ -23,7 +23,6 @@ import net.arwix.astronomy.core.calendar.getGMST
 import net.arwix.astronomy.core.vector.Matrix
 import net.arwix.astronomy.core.vector.SphericalVector
 import net.arwix.astronomy.core.vector.Vector
-import net.arwix.astronomy.core.vector.VectorType
 import java.util.*
 
 
@@ -52,7 +51,7 @@ data class AzimuthCoordintates(val lambda: Double, val phi: Double) {
      */
     @Azimuth @Geocentric
     fun getCoordinates(GMST: Double, @Equatorial @Geocentric inVector: Vector): Vector {
-        val vector: SphericalVector = inVector.getVectorOfType(VectorType.SPHERICAL) as SphericalVector
+        val vector: SphericalVector = inVector.toType() // getVectorOfType(VectorType.SPHERICAL) as SphericalVector
         val tau = GMST + lambda - vector.phi
         return hourMatrix * SphericalVector(tau, vector.theta, vector.r)
     }

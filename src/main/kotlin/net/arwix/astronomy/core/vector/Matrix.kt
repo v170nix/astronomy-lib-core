@@ -85,7 +85,7 @@ class Matrix() {
          * @return новый вектор
          */
         internal fun timesMV(matrix: Matrix, vector: Vector): Vector {
-            val v = (vector.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector)
+            val v: RectangularVector = vector.toType()
             return RectangularVector().apply {
                 (0..2).forEach { i -> this[i] = (0..2).sumByDouble { j -> matrix[i, j] * v[j] } }
             }
@@ -98,7 +98,7 @@ class Matrix() {
          * @return новый вектор
          */
         internal fun timesVM(vector: Vector, matrix: Matrix): Vector {
-            val v = (vector.getVectorOfType(VectorType.RECTANGULAR) as RectangularVector)
+            val v: RectangularVector = vector.toType()
             return RectangularVector().apply {
                 (0..2).forEach { j -> this[j] = (0..2).sumByDouble { i -> v[i] * matrix[i, j] } }
             }
@@ -155,7 +155,7 @@ class Matrix() {
     }
 
     operator fun set(i: Int, vector: Vector) {
-        elements[i] = vector.getVectorOfType(VectorType.RECTANGULAR).toArray()
+        elements[i] = vector.toType<RectangularVector>().toArray() //vector.getVectorOfType(VectorType.RECTANGULAR).toArray()
     }
 
     operator fun set(i: Int, j: Int, element: Double) {
