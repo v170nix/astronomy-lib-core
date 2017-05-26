@@ -90,19 +90,18 @@ class PositionCalculator(
 
     @Geocentric @Equatorial
     fun getGeocentricEquatorialPositionApparent(T: Double, request: Request): Vector {
-
         val bodyGeo = getGeoPositionJ2000(T, request, 0.0)
         val lightTime = bodyGeo.normalize() / C_Light
         val bodyElements = if (request is Request.HeliocentricEclipticBody && request.keplerElements != null) request.keplerElements else null
         val earthVelocity = KeplerBodySimonJ2000.Earth.getOrbitalPlane(T).velocity
-        val bodyVelocity = bodyElements?.getOrbitalPlane(T)?.velocity ?: getBodyVelocity(T, request, lightTime)
 
-        return transformMatrix * (bodyGeo - (bodyVelocity - earthVelocity) * lightTime)  //  (aberration(bodyGeo.toType(), earthVelocity.toType(), lightTime))
+        val oldBodyVelocity = request.velocitySpeed
 
-        //            .letIf(precession.isEcliptic, precession::transformFromJ2000)
-//                .let(obliquity::rotateFromEclipticToEquatorial)
-//                .letIf(!precession.isEcliptic, precession::transformFromJ2000)
-//                .let(nutation::applyNutationToGeocentricVector)
+        val bodyVelocity = if (request.usePreviousVelocitySpeed && oldBodyVelocity != null) oldBodyVelocity else {
+            bodyElements?.getOrbitalPlane(T)?.velocity ?: getBodyVelocity(T, request, lightTime)
+        }
+        request.velocitySpeed = bodyVelocity
+        return transformMatrix * (bodyGeo - (bodyVelocity - earthVelocity) * lightTime)
     }
 
     /**
@@ -135,14 +134,20 @@ class PositionCalculator(
     }
 
     @Ecliptic
-    sealed class Request {
+    sealed class Request(val usePreviousVelocitySpeed: Boolean = false) {
+
+        internal var velocitySpeed: Vector? = null
+
         @Heliocentric @Ecliptic
-        data class HeliocentricEclipticBody(
+        class HeliocentricEclipticBody(
                 val getCoordinates: FunGetHeliocentricEclipticCoordinates,
-                val keplerElements: KeplerElements? = null) : Request()
+                val keplerElements: KeplerElements? = null,
+                usePreviousVelocitySpeed: Boolean = false) : Request(usePreviousVelocitySpeed)
 
         @Geocentric @Ecliptic
-        data class GeocentricEclipticBody(val getCoordinates: FunGetGeocentricEclipticCoordinates) : Request()
+        class GeocentricEclipticBody(
+                val getCoordinates: FunGetGeocentricEclipticCoordinates,
+                usePreviousVelocitySpeed: Boolean = false) : Request(usePreviousVelocitySpeed)
     }
 
 

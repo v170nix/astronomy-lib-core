@@ -118,9 +118,12 @@ class RiseSetCalculatorTest {
         )
 
         val begin = System.nanoTime()
-        val vectorAltB = positionCalc.getGeocentricEquatorialPositionApparent(t,
-                PositionCalculator.Request.HeliocentricEclipticBody(
-                        SwissBody.Venus().getHeliocentricEclipticCoordinates))
+        val request = PositionCalculator.Request.GeocentricEclipticBody(
+                SwissBody.Moon(Precession.Williams1994(t)).getGeocentricEclipticCoordinates, true)
+
+        var vectorAltB = positionCalc.getGeocentricEquatorialPositionApparent(t, request)
+
+        vectorAltB = positionCalc.getGeocentricEquatorialPositionApparent(t + 1.0 / 36525.0, request)
 
 
 //        val vectorAltB = positionCalc.getGeocentricEquatorialPositionApparent(t,
