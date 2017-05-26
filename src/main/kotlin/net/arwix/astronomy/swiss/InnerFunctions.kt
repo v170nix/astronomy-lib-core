@@ -355,14 +355,14 @@ private fun meanElements(T: Double): DoubleArray {
 
     val delta = -.047 * ARCSEC_TO_RAD
 
-    Args[0] = KeplerBodySimonJ2000.Mercury(T).Longitude + delta
-    Args[1] = KeplerBodySimonJ2000.Venus(T).Longitude + delta
-    Args[2] = KeplerBodySimonJ2000.Earth(T).Longitude + delta
-    Args[3] = KeplerBodySimonJ2000.Mars(T).Longitude + delta
-    Args[4] = KeplerBodySimonJ2000.Jupiter(T).Longitude + delta
-    Args[5] = KeplerBodySimonJ2000.Saturn(T).Longitude + delta
-    Args[6] = KeplerBodySimonJ2000.Uranus(T).Longitude + delta
-    Args[7] = KeplerBodySimonJ2000.Neptune(T).Longitude + delta
+    Args[0] = KeplerBodySimonJ2000.Mercury.getLongitude(T) + delta
+    Args[1] = KeplerBodySimonJ2000.Venus.getLongitude(T) + delta
+    Args[2] = KeplerBodySimonJ2000.Earth.getLongitude(T) + delta
+    Args[3] = KeplerBodySimonJ2000.Mars.getLongitude(T) + delta
+    Args[4] = KeplerBodySimonJ2000.Jupiter.getLongitude(T) + delta
+    Args[5] = KeplerBodySimonJ2000.Saturn.getLongitude(T) + delta
+    Args[6] = KeplerBodySimonJ2000.Uranus.getLongitude(T) + delta
+    Args[7] = KeplerBodySimonJ2000.Neptune.getLongitude(T) + delta
 
     /* Copied from cmoon.c, DE404 version. */
     /* Mean elongation of moon = elongation */

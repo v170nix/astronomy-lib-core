@@ -126,7 +126,7 @@ private object SwissLibrationImpl : Coordinates {
                     LibrationSwissData.max_power_of_t, LibrationSwissData.maxargs,
                     LibrationSwissData.timescale, LibrationSwissData.trunclvl, true).toType()
 
-            p[0] -= KeplerBodySimonJ2000.Earth(t).Longitude - .047 * ARCSEC_TO_RAD
+            p[0] -= KeplerBodySimonJ2000.Earth.getLongitude(t) - .047 * ARCSEC_TO_RAD
 
             val elements = EarthMoonElements(t)
 

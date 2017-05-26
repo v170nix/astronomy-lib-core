@@ -50,7 +50,7 @@ class RiseSetCalculatorTest {
         calendar.set(Calendar.MILLISECOND, 0)
         val t = calendar.getJT(true)
 
-        val em = SwissBody.EMBarycenter().getHeliocentricEclipticCoordinates(t).getVectorOfType(VectorType.SPHERICAL)
+        val em: SphericalVector = SwissBody.EMBarycenter().getHeliocentricEclipticCoordinates(t).toType()
 
         println("${em[0]}, ${em[1]}, ${em[2]}")
 
@@ -94,8 +94,8 @@ class RiseSetCalculatorTest {
         val lightTime = dT * 36525.0
 
 
-        val orbit = KeplerBodyJPL.Venus(t).getOrbitalPlane()
-        val eOrbit = KeplerBodyJPL.EarthMoonBarycenter(t).getOrbitalPlane()
+        val orbit = KeplerBodyJPL.Venus.getOrbitalPlane(t)
+        val eOrbit = KeplerBodyJPL.EarthMoonBarycenter.getOrbitalPlane(t)
 
         println(eOrbit.velocity.toType<RectangularVector>().let { "eVelocity ${it.x} ${it.y} ${it.z} ${it.normalize()}" })
 
@@ -110,18 +110,26 @@ class RiseSetCalculatorTest {
 
         vectorAltA = nutation.applyNutationToGeocentricVector(vectorAltA)
 
+        val aEarth = AEarthData()
         val positionCalc = PositionCalculator(
-                Precession.DE4xx(t),
-                SwissBody.Earth(Precession.Williams1994(t)).getHeliocentricEclipticCoordinates)
+                Precession.Vondrak2011(t),
+                { t -> (aEarth as VsopData).getEclipticCoordinates(t) }
+                //          SwissBody.Earth(Precession.Williams1994(t)).getHeliocentricEclipticCoordinates
+        )
+
+        val begin = System.nanoTime()
+        val vectorAltB = positionCalc.getGeocentricEquatorialPositionApparent(t,
+                PositionCalculator.Request.HeliocentricEclipticBody(
+                        SwissBody.Venus().getHeliocentricEclipticCoordinates))
+
 
 //        val vectorAltB = positionCalc.getGeocentricEquatorialPositionApparent(t,
-//                PositionCalculator.Request.HeliocentricEclipticBody(
-//                        SwissBody.Venus().getHeliocentricEclipticCoordinates, KeplerBodySimonJ2000.Venus(t)),
-//                SwissBody.Venus().getHeliocentricEclipticCoordinates)
+//                PositionCalculator.Request.GeocentricEclipticBody(
+//                        SwissBody.Moon(Precession.Williams1994(t)).getGeocentricEclipticCoordinates))
 
-        val vectorAltB = positionCalc.getGeocentricEquatorialPositionApparent(t,
-                PositionCalculator.Request.GeocentricEclipticBody(
-                        SwissBody.Moon(Precession.Williams1994(t)).getGeocentricEclipticCoordinates))
+        val end = System.nanoTime()
+
+        println(end - begin)
 
         //   System.out.println("e= " + epsilon.toString())
         System.out.println("Alt J2000 " + printLong(vectorAltB))
@@ -135,7 +143,7 @@ class RiseSetCalculatorTest {
         // Apparent
         val eD: VsopData = CEarthData()
         val position = Position(eD)
-        val vector = position.getGeocentricEquatorialPosition(t, CUranusData() as VsopData)
+        val vector = position.getGeocentricEquatorialPosition(t, CVenusData() as VsopData)
         System.out.println(printLong(vector))
         System.out.println(printLat(vector))
 
