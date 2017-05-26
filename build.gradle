@@ -36,9 +36,7 @@ bintray {
         version {
             name = project.version
         }
-
         publications = ['MyPublication']
-
     }
 }
 
