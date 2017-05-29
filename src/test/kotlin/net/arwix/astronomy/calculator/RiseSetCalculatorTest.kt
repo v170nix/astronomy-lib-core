@@ -108,7 +108,7 @@ class RiseSetCalculatorTest {
         if (!precession.isEcliptic) vectorAltA = precession.transformFromJ2000(vectorAltA)
 
 
-        vectorAltA = nutation.applyNutationToGeocentricVector(vectorAltA)
+        vectorAltA = nutation.applyNutationToEquatorialVector(vectorAltA)
 
         val aEarth = AEarthData()
         val positionCalc = PositionCalculator(

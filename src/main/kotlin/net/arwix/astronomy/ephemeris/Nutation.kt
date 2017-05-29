@@ -17,7 +17,7 @@
 package net.arwix.astronomy.ephemeris
 
 import net.arwix.astronomy.annotation.Ecliptic
-import net.arwix.astronomy.annotation.Geocentric
+import net.arwix.astronomy.annotation.Equatorial
 import net.arwix.astronomy.core.ARCSEC_TO_RAD
 import net.arwix.astronomy.core.DEG_TO_RAD
 import net.arwix.astronomy.core.vector.Matrix
@@ -44,7 +44,7 @@ interface NutationTransformation {
     @Ecliptic fun applyNutationToEclipticVector(@Ecliptic vector: Vector): Vector
     @Ecliptic fun removeNutationFromEclipticVector(@Ecliptic vector: Vector): Vector
 
-    @Geocentric val geocentricMatrix: Matrix
+    @Equatorial val equatorialMatrix: Matrix
 
     /**
      * Nutates equatorial coordinates from mean dynamical equator and equinox of date to true
@@ -55,14 +55,15 @@ interface NutationTransformation {
      * @param vector equatorial coordinates
      * @return Output equatorial coordinates
      */
-    @Geocentric fun applyNutationToGeocentricVector(@Geocentric vector: Vector): Vector
-    @Geocentric fun removeNutationFromGeocentricVector(@Geocentric vector: Vector): Vector
+    @Equatorial fun applyNutationToEquatorialVector(@Equatorial vector: Vector): Vector
+
+    @Equatorial fun removeNutationFromEquatorialVector(@Equatorial vector: Vector): Vector
 }
 
 private class ImplNutationTransform(nutationAngles: NutationResult, meanEps: Double) : NutationTransformation {
 
     override val eclipticMatrix = getEclipticMatrix(nutationAngles)
-    override val geocentricMatrix = getGeocentricMatrix(nutationAngles, meanEps)
+    override val equatorialMatrix = getGeocentricMatrix(nutationAngles, meanEps)
 
 
     companion object {
@@ -82,8 +83,8 @@ private class ImplNutationTransform(nutationAngles: NutationResult, meanEps: Dou
 
     override fun applyNutationToEclipticVector(vector: Vector) = eclipticMatrix * vector
     override fun removeNutationFromEclipticVector(vector: Vector) = vector * eclipticMatrix
-    override fun applyNutationToGeocentricVector(vector: Vector) = geocentricMatrix * vector
-    override fun removeNutationFromGeocentricVector(vector: Vector) = vector * geocentricMatrix
+    override fun applyNutationToEquatorialVector(vector: Vector) = equatorialMatrix * vector
+    override fun removeNutationFromEquatorialVector(vector: Vector) = vector * equatorialMatrix
 
 }
 

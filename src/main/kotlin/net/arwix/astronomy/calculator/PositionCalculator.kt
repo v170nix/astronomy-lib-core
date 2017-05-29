@@ -40,9 +40,9 @@ class PositionCalculator(
     val nutation = precession.getNearsetNutationModel(obliquity)
 
     val transformMatrix = if (precession.isEcliptic)
-        nutation.geocentricMatrix * obliquity.eclipticToEquatorialMatrix * precession.fromJ2000Matrix
+        nutation.equatorialMatrix * obliquity.eclipticToEquatorialMatrix * precession.fromJ2000Matrix
     else
-        nutation.geocentricMatrix * precession.fromJ2000Matrix * obliquity.eclipticToEquatorialMatrix
+        nutation.equatorialMatrix * precession.fromJ2000Matrix * obliquity.eclipticToEquatorialMatrix
     /**
      * @param lightTime in days
      */
