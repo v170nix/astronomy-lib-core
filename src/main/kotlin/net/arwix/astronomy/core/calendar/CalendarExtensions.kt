@@ -51,6 +51,7 @@ fun Calendar.setHours(hours: Double) {
  * @return Модифицированная юлианская дата
  */
 fun Calendar.getMJD(): Double {
+    val daylight = if (timeZone.inDaylightTime(time)) timeZone.dstSavings else 0
     var y = get(Calendar.YEAR).toLong()
     var m = get(Calendar.MONTH) + 1
     if (m <= 2) {
@@ -61,7 +62,7 @@ fun Calendar.getMJD(): Double {
     val MJDN = 365 * y - 679004L + b + (30.6001 * (m + 1)).toInt() + get(Calendar.DATE)
     val MJDF = (abs(get(Calendar.HOUR_OF_DAY)) + abs(get(Calendar.MINUTE)) / 60.0 +
             abs(get(Calendar.SECOND) + get(Calendar.MILLISECOND) / 1000.0) / 3600.0) / 24.0
-    return MJDN + MJDF - get(Calendar.ZONE_OFFSET) / 24.0 / 60.0 / 60.0 / 1000.0
+    return MJDN + MJDF - (get(Calendar.ZONE_OFFSET) + daylight) / 24.0 / 60.0 / 60.0 / 1000.0
 }
 
 /**
