@@ -20,19 +20,22 @@ package net.arwix.astronomy.calculator
 import net.arwix.astronomy.annotation.Ecliptic
 import net.arwix.astronomy.annotation.Geocentric
 import net.arwix.astronomy.annotation.Heliocentric
-import net.arwix.astronomy.core.AU
-import net.arwix.astronomy.core.C_Light
-import net.arwix.astronomy.core.DEG
-import net.arwix.astronomy.core.Position
+import net.arwix.astronomy.core.*
 import net.arwix.astronomy.core.calendar.getJT
+import net.arwix.astronomy.core.coordinates.EclipticCoordinates
 import net.arwix.astronomy.core.kepler.KeplerBodyJPL
 import net.arwix.astronomy.core.vector.RectangularVector
 import net.arwix.astronomy.core.vector.SphericalVector
 import net.arwix.astronomy.core.vector.Vector
 import net.arwix.astronomy.core.vector.VectorType
+import net.arwix.astronomy.ephemeris.FastCalculation
+import net.arwix.astronomy.ephemeris.Obliquity
 import net.arwix.astronomy.ephemeris.Precession
+import net.arwix.astronomy.math.radians.toDeg
 import net.arwix.astronomy.swiss.SwissBody
-import net.arwix.astronomy.vsop87.*
+import net.arwix.astronomy.vsop87.AEarthData
+import net.arwix.astronomy.vsop87.CEarthData
+import net.arwix.astronomy.vsop87.VsopData
 import org.junit.Test
 import java.util.*
 
@@ -41,7 +44,7 @@ class RiseSetCalculatorTest {
     @Test
     fun calls() {
         val calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-        calendar.set(Calendar.YEAR, 2014)
+        calendar.set(Calendar.YEAR, 2024)
         calendar.set(Calendar.MONTH, 8)
         calendar.set(Calendar.DAY_OF_MONTH, 17)
         calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -108,23 +111,43 @@ class RiseSetCalculatorTest {
         if (!precession.isEcliptic) vectorAltA = precession.transformFromJ2000(vectorAltA)
 
 
-        vectorAltA = nutation.applyNutationToEquatorialVector(vectorAltA)
-
+//        vectorAltA = nutation.applyNutationToEquatorialVector(vectorAltA)
+//
         val aEarth = AEarthData()
         val positionCalc = PositionCalculator(
                 Precession.Vondrak2011(t),
+                //          {t ->KeplerBodySimonJ2000.Earth.getOrbitalPlane(t).position}
                 { t -> (aEarth as VsopData).getEclipticCoordinates(t) }
                 //          SwissBody.Earth(Precession.Williams1994(t)).getHeliocentricEclipticCoordinates
         )
 
         val begin = System.nanoTime()
-        val request = PositionCalculator.Request.GeocentricEclipticBody(
-                SwissBody.Moon(Precession.Williams1994(t)).getGeocentricEclipticCoordinates, true)
+        val request = PositionCalculator.Request.HeliocentricEclipticBody({ t -> RectangularVector() })
+
+
 
         var vectorAltB = positionCalc.getGeocentricEquatorialPositionApparent(t, request)
 
-        vectorAltB = positionCalc.getGeocentricEquatorialPositionApparent(t + 1.0 / 36525.0, request)
+        //     vectorAltB = positionCalc.getGeocentricEquatorialPositionApparent(t, request)
 
+
+        vectorAltB = Obliquity.Simon1994(t).rotateFromEclipticToEquatorial(FastCalculation.getSunGeocentricEclipticApparentCoordinates(t))
+
+        val lon = FastCalculation.getMoonGeocentricEclipticApparentLongitude(t)
+
+        println("lon ${lon.toDeg()}")
+
+        val lat = FastCalculation.getMoonGeocentricEclipticApparentLatitude(t)
+
+        println("lat ${lat.toDeg()}")
+
+        val r = FastCalculation.getMoonGeocentricApparentDistance(t)
+
+        println(" r $r")
+
+        vectorAltB = Obliquity.IAU2006(t).rotateFromEclipticToEquatorial(FastCalculation.getMoonGeocentricEclipticApparentCoordinates(t))
+
+        //    vectorAltB = Nutation.IAU2006(t, Obliquity.IAU2006(t)).applyNutationToEquatorialVector(vectorAltB)
 
 //        val vectorAltB = positionCalc.getGeocentricEquatorialPositionApparent(t,
 //                PositionCalculator.Request.GeocentricEclipticBody(
@@ -135,20 +158,31 @@ class RiseSetCalculatorTest {
         println(end - begin)
 
         //   System.out.println("e= " + epsilon.toString())
-        System.out.println("Alt J2000 " + printLong(vectorAltB))
-        System.out.println("Alt J2000 " + printLat(vectorAltB))
+        System.out.println("Sun Apparent " + printLong(vectorAltB))
+        System.out.println("Sun Apparent " + printLat(vectorAltB))
+        println("Sun Apparent " + printR(vectorAltB))
 
-        var vectorA = positionA.getGeocentricEquatorialPosition(t, AVenusData() as VsopData)
-        vectorA = net.arwix.astronomy.ephem.Precession.precessFromJ2000(t, vectorA)
-        System.out.println(printLong(vectorA))
-        System.out.println(printLat(vectorA))
 
         // Apparent
         val eD: VsopData = CEarthData()
         val position = Position(eD)
-        val vector = position.getGeocentricEquatorialPosition(t, CVenusData() as VsopData)
+        val vector = position.getGeocentricEquatorialPosition(t, object : EclipticCoordinates<String> {
+            override fun getEpoch(): Epoch {
+                return Epoch.APPARENT
+            }
+
+            override fun getIdObject(): String {
+                return "SUN"
+            }
+
+            override fun getEclipticCoordinates(T: Double): Vector {
+                return RectangularVector()
+            }
+
+        })
         System.out.println(printLong(vector))
         System.out.println(printLat(vector))
+        println(printR(vector))
 
 //
 //        val c = RiseSetCalculator(date, location, { t: Double, e: Epoch ->
@@ -235,5 +269,9 @@ class RiseSetCalculatorTest {
         val m = mm.toInt()
         val s = (mm - m) * 60.0
         return String.format(Locale.ENGLISH, "%1$02d %2$02d %3$.1f", g, Math.abs(m), Math.abs(s))
+    }
+
+    private fun printR(p: Vector): String {
+        return p.toType<SphericalVector>().r.toString()
     }
 }

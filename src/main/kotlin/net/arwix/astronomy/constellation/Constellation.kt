@@ -17,7 +17,6 @@
 package net.arwix.astronomy.constellation
 
 import net.arwix.astronomy.core.RAD_TO_ARCSEC
-import net.arwix.astronomy.core.RAD_TO_HOUR
 import net.arwix.astronomy.core.calendar.getJT
 import net.arwix.astronomy.core.letIf
 import net.arwix.astronomy.core.vector.SphericalVector
@@ -26,6 +25,7 @@ import net.arwix.astronomy.ephemeris.Nutation
 import net.arwix.astronomy.ephemeris.Obliquity
 import net.arwix.astronomy.ephemeris.Precession
 import net.arwix.astronomy.math.radians.normalize
+import net.arwix.astronomy.math.radians.toHour
 
 
 object Constellation {
@@ -76,7 +76,7 @@ object Constellation {
             k = i shl 2
             if (ra >= BOUNDARIES[k] && ra < BOUNDARIES[k + 1] && dec > BOUNDARIES[k + 2]) {
                 k = BOUNDARIES[k + 3]
-                if (k == 74 && vector.phi.normalize() > 17 / RAD_TO_HOUR) k = CONSTELLATION_ABBREV.size - 1
+                if (k == 74 && vector.phi.normalize().toHour() > 17.0) k = CONSTELLATION_ABBREV.size - 1
                 return CONSTELLATION_ABBREV[k]
             }
             i++

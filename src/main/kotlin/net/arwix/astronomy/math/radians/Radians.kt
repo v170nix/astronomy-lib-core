@@ -16,18 +16,16 @@
 
 package net.arwix.astronomy.math.radians
 
-import net.arwix.astronomy.core.PI2
-import net.arwix.astronomy.core.PI4
-import net.arwix.astronomy.core.RAD_TO_HOUR
+import net.arwix.astronomy.core.*
+import net.arwix.astronomy.math.Degrees.Degree
 
 typealias Radian = Double
 
 /**
  * Reduce an angle in radians to the range (0 - 2 Pi).
- *
  * @return The reduced radian value.
  */
-fun Double.normalize(): Radian {
+fun Radian.normalize(): Radian {
     if (this >= 0 && this < PI2) return this
     if (this < 0 && this >= -PI2) return this + PI2
     if (this >= PI2 && this < PI4) return this - PI2
@@ -43,3 +41,7 @@ fun Double.normalize(): Radian {
  * Radians to hours
  */
 fun Radian.toHour(): Double = this * RAD_TO_HOUR
+
+fun Radian.toDay(): Double = this * RAD_TO_DAY
+
+fun Radian.toDeg(): Degree = this * RAD_TO_DEG

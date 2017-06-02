@@ -22,7 +22,7 @@ import net.arwix.astronomy.core.coordinates.EclipticCoordinates
 import net.arwix.astronomy.core.vector.Vector
 import java.lang.IllegalArgumentException
 
-
+@Deprecated("old class")
 open class Position(private val earthEclipticCoordinates: EclipticCoordinates<*>) {
 
     var cacheListener: CacheListener? = null
