@@ -20,6 +20,7 @@ package net.arwix.astronomy.calculator
 import net.arwix.astronomy.annotation.Ecliptic
 import net.arwix.astronomy.annotation.Geocentric
 import net.arwix.astronomy.annotation.Heliocentric
+import net.arwix.astronomy.constellation.Constellation
 import net.arwix.astronomy.core.*
 import net.arwix.astronomy.core.calendar.getJT
 import net.arwix.astronomy.core.coordinates.EclipticCoordinates
@@ -41,10 +42,17 @@ import java.util.*
 
 
 class RiseSetCalculatorTest {
+
+    @Test
+    fun constellation() {
+
+    }
+
+
     @Test
     fun calls() {
         val calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-        calendar.set(Calendar.YEAR, 2024)
+        calendar.set(Calendar.YEAR, 2014)
         calendar.set(Calendar.MONTH, 8)
         calendar.set(Calendar.DAY_OF_MONTH, 17)
         calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -146,6 +154,14 @@ class RiseSetCalculatorTest {
         println(" r $r")
 
         vectorAltB = Obliquity.IAU2006(t).rotateFromEclipticToEquatorial(FastCalculation.getMoonGeocentricEclipticApparentCoordinates(t))
+
+        val pr = Precession.IAU2006(t)
+        val cons = Constellation.getAbbreviationApparent(
+                vectorAltB.toType(), pr.getNearsetNutationModel(pr.getNearestObliquityModel(t), t), pr, pr.getNearestObliquityModel(t)
+
+        )
+
+        println("cons ${cons}")
 
         //    vectorAltB = Nutation.IAU2006(t, Obliquity.IAU2006(t)).applyNutationToEquatorialVector(vectorAltB)
 
