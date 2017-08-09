@@ -54,6 +54,7 @@ package net.arwix.astronomy.core
 // @JvmField val R_Moon = 1738.0
 
 @JvmField val MJD_J2000 = 51544.5        // MJD на эпоху J2000.0
+@JvmField val DELTA_JD_MJD = 2400000.5
 @JvmField val T_J2000 = 0.0           // эпоха J2000.0
 @JvmField val T_B1950 = -0.500002108   // эпоха B1950
 @JvmField val JD_SECOND = 0.000011574074074074074074
