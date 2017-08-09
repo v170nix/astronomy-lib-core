@@ -16,7 +16,7 @@
 
 package net.arwix.astronomy.math
 
-fun DoubleArray.polynomialSum(x: Double): Double {
+inline fun DoubleArray.polynomialSum(x: Double): Double {
     var t = 1.0
     return this.fold(0.0, { acc, d -> (acc + d * t).let { t *= x; it } })
 }
