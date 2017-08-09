@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 @file:JvmName("CalendarExtensions")
+
 package net.arwix.astronomy.core.calendar
 
 import net.arwix.astronomy.core.MJD_J2000
 import net.arwix.astronomy.core.PI2
 import net.arwix.astronomy.core.SECS_DAY
-import java.lang.Math.abs
-import java.lang.Math.pow
+import java.lang.Math.*
 import java.util.*
 import java.util.Calendar.MONTH
 import java.util.Calendar.YEAR
 import java.util.concurrent.TimeUnit
+
+typealias MJD = Double
 
 /**
  * Устанавливает время в календаре используя доли часа
@@ -46,11 +48,15 @@ fun Calendar.setHours(hours: Double) {
     set(Calendar.MILLISECOND, millisecond)
 }
 
+fun Calendar.getHours(): Double {
+    return get(Calendar.HOUR_OF_DAY) + (get(Calendar.MINUTE) + get(Calendar.SECOND) / 60.0) / 60.0
+}
+
 /**
  * Вычисление модифицированного юлианского дня
  * @return Модифицированная юлианская дата
  */
-fun Calendar.getMJD(): Double {
+fun Calendar.getMJD(): MJD {
     val daylight = if (timeZone.inDaylightTime(time)) timeZone.dstSavings else 0
     var y = get(Calendar.YEAR).toLong()
     var m = get(Calendar.MONTH) + 1
@@ -59,7 +65,7 @@ fun Calendar.getMJD(): Double {
     }
     val b = if (10000L * y + 100L * m + get(Calendar.DATE).toLong() <= 15821004L)
         -2L + (y + 4716L) / 4 - 1179L else (y / 400 - y / 100 + y / 4)
-    val MJDN = 365 * y - 679004L + b + (30.6001 * (m + 1)).toInt() + get(Calendar.DATE)
+    val MJDN = 365 * y - 679004L + b + (30.6001 * (m + 1)).toInt() + get(Calendar.DAY_OF_MONTH)
     val MJDF = (abs(get(Calendar.HOUR_OF_DAY)) + abs(get(Calendar.MINUTE)) / 60.0 +
             abs(get(Calendar.SECOND) + get(Calendar.MILLISECOND) / 1000.0) / 3600.0) / 24.0
     return MJDN + MJDF - (get(Calendar.ZONE_OFFSET) + daylight) / 24.0 / 60.0 / 60.0 / 1000.0
@@ -70,7 +76,7 @@ fun Calendar.getMJD(): Double {
  * @param aMJD юлианская дата
  * @return J2000
  */
-fun getJT(aMJD: Double) = (aMJD - MJD_J2000) / 36525.0
+fun getJT(aMJD: MJD) = (aMJD - MJD_J2000) / 36525.0
 
 fun Calendar.getJT(applyDeltaT: Boolean = false) = getJT(getMJD() + if (applyDeltaT) getDeltaT(TimeUnit.DAYS) else 0.0)
 
@@ -80,7 +86,7 @@ fun Calendar.getJT(applyDeltaT: Boolean = false) = getJT(getMJD() + if (applyDel
  * @param aMJD Время в форме модифицированной юлианской даты
  * @return GMST в радианах
  */
-fun getGMST(aMJD: Double): Double {
+fun getGMST(aMJD: MJD): Double {
     val MJD_0 = Math.floor(aMJD)
     val UT = SECS_DAY * (aMJD - MJD_0) // [сек]
     val T_0 = (MJD_0 - 51544.5) / 36525.0
@@ -170,3 +176,51 @@ fun Calendar.resetTime() {
     set(Calendar.SECOND, 0)
     set(Calendar.MILLISECOND, 0)
 }
+
+fun Calendar.year() = this.get(Calendar.YEAR)
+fun Calendar.month() = this.get(Calendar.MONTH)
+fun Calendar.dayOfMonth() = this.get(Calendar.DAY_OF_MONTH)
+fun Calendar.dayOfYear() = this.get(Calendar.DAY_OF_YEAR)
+fun Calendar.hourOfDay() = this.get(Calendar.HOUR_OF_DAY)
+fun Calendar.minute() = this.get(Calendar.MINUTE)
+fun Calendar.second() = this.get(Calendar.SECOND)
+fun Calendar.millisecond() = this.get(Calendar.MILLISECOND)
+fun Calendar.zoneOffset() = this.get(Calendar.ZONE_OFFSET)
+
+fun Calendar.year(year: Int) {
+    this.set(Calendar.YEAR, year)
+}
+
+fun Calendar.month(month: Int) = this.set(Calendar.MONTH, month)
+fun Calendar.dayOfMonth(day: Int) = this.set(Calendar.DAY_OF_MONTH, day)
+fun Calendar.dayOfYear(day: Int) = this.set(Calendar.DAY_OF_YEAR, day)
+fun Calendar.hourOfDay(hour: Int) = this.set(Calendar.HOUR_OF_DAY, hour)
+fun Calendar.minute(minute: Int) = this.set(Calendar.MINUTE, minute)
+fun Calendar.second(second: Int) = this.set(Calendar.SECOND, second)
+fun Calendar.millisecond(millisecond: Int) = this.set(Calendar.MILLISECOND, millisecond)
+
+fun fromMJDToCalendar(mjd: MJD, calendar: Calendar, applyDeltaT: Boolean = false) {
+
+    val a = (mjd + 2400001.0).toLong()
+    val c = if (a < 2299161) a + 1524L else {
+        val b = ((a - 1867216.25) / 36524.25).toLong()
+        a + b - (b / 4) + 1525
+    }
+
+    val d = ((c - 122.1) / 365.25).toLong()
+    val e = 365 * d + d / 4
+    val f = ((c - e) / 30.6001).toLong()
+
+    val day = c - e - (30.6001 * f).toLong()
+    val month = f - 1 - 12 * (f / 14)
+    val year = d - 4715 - ((7 + month) / 10)
+    val hours = mjd - floor(mjd) + calendar.get(Calendar.ZONE_OFFSET) / 24.0 / 60.0 / 60.0 / 1000.0
+    calendar.set(year.toInt(), month.toInt() - 1, day.toInt())
+    calendar.timeZone.useDaylightTime()
+    calendar.setHours(hours * 24.0)
+    val daylight = if (calendar.timeZone.inDaylightTime(calendar.time)) calendar.timeZone.dstSavings else 0
+    if (daylight != 0) calendar.set(Calendar.MILLISECOND, calendar.get(Calendar.MILLISECOND) + daylight)
+    if (applyDeltaT) calendar.second(calendar.second() - calendar.getDeltaT(TimeUnit.SECONDS).toInt())
+}
+
+fun MJD.toCalendar(applyDeltaT: Boolean = false) = fromMJDToCalendar(this, Calendar.getInstance(), applyDeltaT)
