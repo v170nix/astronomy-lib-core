@@ -48,7 +48,7 @@ fun Calendar.setHours(hours: Double) {
     set(Calendar.MILLISECOND, millisecond)
 }
 
-fun Calendar.getHours(): Double {
+inline fun Calendar.getHours(): Double {
     return get(Calendar.HOUR_OF_DAY) + (get(Calendar.MINUTE) + get(Calendar.SECOND) / 60.0) / 60.0
 }
 
@@ -170,34 +170,34 @@ fun Calendar.getDeltaT(unit: TimeUnit): Double {
     }
 }
 
-fun Calendar.resetTime() {
+inline fun Calendar.resetTime() {
     set(Calendar.HOUR_OF_DAY, 0)
     set(Calendar.MINUTE, 0)
     set(Calendar.SECOND, 0)
     set(Calendar.MILLISECOND, 0)
 }
 
-fun Calendar.year() = this.get(Calendar.YEAR)
-fun Calendar.month() = this.get(Calendar.MONTH)
-fun Calendar.dayOfMonth() = this.get(Calendar.DAY_OF_MONTH)
-fun Calendar.dayOfYear() = this.get(Calendar.DAY_OF_YEAR)
-fun Calendar.hourOfDay() = this.get(Calendar.HOUR_OF_DAY)
-fun Calendar.minute() = this.get(Calendar.MINUTE)
-fun Calendar.second() = this.get(Calendar.SECOND)
-fun Calendar.millisecond() = this.get(Calendar.MILLISECOND)
-fun Calendar.zoneOffset() = this.get(Calendar.ZONE_OFFSET)
+inline fun Calendar.year() = this.get(Calendar.YEAR)
+inline fun Calendar.month() = this.get(Calendar.MONTH)
+inline fun Calendar.dayOfMonth() = this.get(Calendar.DAY_OF_MONTH)
+inline fun Calendar.dayOfYear() = this.get(Calendar.DAY_OF_YEAR)
+inline fun Calendar.hourOfDay() = this.get(Calendar.HOUR_OF_DAY)
+inline fun Calendar.minute() = this.get(Calendar.MINUTE)
+inline fun Calendar.second() = this.get(Calendar.SECOND)
+inline fun Calendar.millisecond() = this.get(Calendar.MILLISECOND)
+inline fun Calendar.zoneOffset() = this.get(Calendar.ZONE_OFFSET)
 
-fun Calendar.year(year: Int) {
+inline fun Calendar.year(year: Int) {
     this.set(Calendar.YEAR, year)
 }
 
-fun Calendar.month(month: Int) = this.set(Calendar.MONTH, month)
-fun Calendar.dayOfMonth(day: Int) = this.set(Calendar.DAY_OF_MONTH, day)
-fun Calendar.dayOfYear(day: Int) = this.set(Calendar.DAY_OF_YEAR, day)
-fun Calendar.hourOfDay(hour: Int) = this.set(Calendar.HOUR_OF_DAY, hour)
-fun Calendar.minute(minute: Int) = this.set(Calendar.MINUTE, minute)
-fun Calendar.second(second: Int) = this.set(Calendar.SECOND, second)
-fun Calendar.millisecond(millisecond: Int) = this.set(Calendar.MILLISECOND, millisecond)
+inline fun Calendar.month(month: Int) = this.set(Calendar.MONTH, month)
+inline fun Calendar.dayOfMonth(day: Int) = this.set(Calendar.DAY_OF_MONTH, day)
+inline fun Calendar.dayOfYear(day: Int) = this.set(Calendar.DAY_OF_YEAR, day)
+inline fun Calendar.hourOfDay(hour: Int) = this.set(Calendar.HOUR_OF_DAY, hour)
+inline fun Calendar.minute(minute: Int) = this.set(Calendar.MINUTE, minute)
+inline fun Calendar.second(second: Int) = this.set(Calendar.SECOND, second)
+inline fun Calendar.millisecond(millisecond: Int) = this.set(Calendar.MILLISECOND, millisecond)
 
 fun fromMJDToCalendar(mjd: MJD, calendar: Calendar, applyDeltaT: Boolean = false) {
 
