@@ -374,9 +374,9 @@ class MoonEventsCalculator(initTimeCalendar: Calendar, cores: Int = 1) {
     }
 
     sealed class SolarEclipse(val timeOfMaximumEclipseMJD: Double) : Eclipse {
-        class Total(timeOfMaximumEclipseMJD: Double, isCentral: Boolean) : SolarEclipse(timeOfMaximumEclipseMJD)
-        class Annular(timeOfMaximumEclipseMJD: Double, isCentral: Boolean) : SolarEclipse(timeOfMaximumEclipseMJD)
-        class Hybrid(timeOfMaximumEclipseMJD: Double, isCentral: Boolean) : SolarEclipse(timeOfMaximumEclipseMJD)
+        class Total(timeOfMaximumEclipseMJD: Double, val isCentral: Boolean) : SolarEclipse(timeOfMaximumEclipseMJD)
+        class Annular(timeOfMaximumEclipseMJD: Double, val isCentral: Boolean) : SolarEclipse(timeOfMaximumEclipseMJD)
+        class Hybrid(timeOfMaximumEclipseMJD: Double, val isCentral: Boolean) : SolarEclipse(timeOfMaximumEclipseMJD)
         class Partial(timeOfMaximumEclipseMJD: Double, val magnitude: Double) : SolarEclipse(timeOfMaximumEclipseMJD)
     }
 
