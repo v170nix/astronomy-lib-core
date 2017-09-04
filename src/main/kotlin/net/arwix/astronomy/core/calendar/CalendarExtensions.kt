@@ -157,7 +157,7 @@ fun Calendar.getDeltaT(unit: TimeUnit): Double {
         }
         in 2050..2150 -> -20.0 + 32.0 * pow((y - 1820.0) / 100.0, 2.0) - 0.5628 * (2150.0 - y)
         in 2150..3000 -> -20.0 + 32.0 * pow((y - 1820.0) / 100.0, 2.0)
-        else -> throw IndexOutOfBoundsException()
+        else -> -20.0 + 32.0 * pow((y - 1820.0) / 100.0, 2.0)
     }
     return when (unit) {
         TimeUnit.NANOSECONDS -> dt * 1000000000.0

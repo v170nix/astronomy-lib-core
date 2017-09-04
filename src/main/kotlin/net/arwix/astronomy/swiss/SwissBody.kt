@@ -30,6 +30,7 @@ import net.arwix.astronomy.physical.PhysicalBody
 
 sealed class SwissBody : Coordinates {
 
+    object Sun : SwissBody(), Coordinates by SwissSunImpl
     class Libration : SwissBody(), Coordinates by SwissLibrationImpl
     class Mercury : SwissBody(), Coordinates by SwissBaseImpl(MercurySwissData)
     class Venus : SwissBody(), Coordinates by SwissBaseImpl(VenusSwissData)
@@ -42,6 +43,14 @@ sealed class SwissBody : Coordinates {
     class Uranus : SwissBody(), Coordinates by SwissBaseImpl(UranusSwissData)
     class Neptune : SwissBody(), Coordinates by SwissBaseImpl(NeptuneSwissData)
     class Pluto : SwissBody(), Coordinates by SwissBaseImpl(PlutoSwissData)
+}
+
+private object SwissSunImpl : Coordinates {
+    override val getGeocentricEclipticCoordinates: FunGetGeocentricEclipticCoordinates get() = TODO("not implemented")
+    override val getGeocentricEquatorialCoordinates: FunGetGeocentricEclipticCoordinates get() = TODO("not implemented")
+
+    override val getHeliocentricEclipticCoordinates: FunGetHeliocentricEclipticCoordinates
+        get() = { _ -> RectangularVector() }
 }
 
 private class SwissBaseImpl(val swissData: SwissData) : Coordinates {

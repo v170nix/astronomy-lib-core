@@ -48,6 +48,13 @@ package net.arwix.astronomy.core
 /** Degrees to radians.  */
 @JvmField val DEG_TO_RAD = 1.0 / RAD_TO_DEG
 
+/** Pi divided by two.  */
+@JvmField val PI_OVER_TWO = Math.PI / 2.0
+/** Pi divided by four.  */
+@JvmField val PI_OVER_FOUR = Math.PI / 4.0
+/** Pi divided by six.  */
+@JvmField val PI_OVER_SIX = Math.PI / 6.0
+
 // радиусы Земли, Солнца, Луны в км
 // @JvmField val R_Earth = 6378.137
 // @JvmField val R_Sun = 696000.0
