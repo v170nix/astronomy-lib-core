@@ -18,7 +18,6 @@ package net.arwix.astronomy.math
 
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.runBlocking
 
 /**
  * @param f        функция реализующа интерфейс [Function]
@@ -27,19 +26,20 @@ import kotlinx.coroutines.experimental.runBlocking
  * @param e        желаемая ночность
  * @param maxSteps максимальное число шагов
  */
-@Deprecated("use SearchGoldenExtremum")
-class SearchExtremumGoldenMethod(private val a: Double, private val b: Double, private val e: Double, private val maxSteps: Int, private val function: (x: Double) -> Double)
-//  this.function = f
-{
+class SearchGoldenExtremum(private val a: Double,
+                           private val b: Double,
+                           private val e: Double,
+                           private val maxSteps: Int,
+                           private val function: (x: Double) -> Double) {
 
     companion object {
         val GOLDEN_RATIO = 0.5 + Math.sqrt(5.0) / 2.0
     }
 
-    val min: Double by lazy { doMin(a, b) }
-    val max: Double by lazy { doMax(a, b) }
+    suspend fun getMax() = doMax(a, b)
+    suspend fun getMin() = doMin(a, b)
 
-    private fun doMax(a: Double, b: Double): Double = runBlocking {
+    private suspend fun doMax(a: Double, b: Double): Double {
         var a = a
         var b = b
         var step = 0
@@ -56,10 +56,11 @@ class SearchExtremumGoldenMethod(private val a: Double, private val b: Double, p
                 b = x2
             }
         } while (Math.abs(a - b) > e && step < maxSteps)
-        return@runBlocking (a + b) / 2.0
+        return (a + b) / 2.0
     }
 
-    private fun doMin(a: Double, b: Double): Double = runBlocking {
+
+    private suspend fun doMin(a: Double, b: Double): Double {
         var a = a
         var b = b
         var step = 0
@@ -76,7 +77,7 @@ class SearchExtremumGoldenMethod(private val a: Double, private val b: Double, p
                 b = x2
             }
         } while (Math.abs(a - b) > e && step < maxSteps)
-        return@runBlocking (a + b) / 2.0
+        return (a + b) / 2.0
     }
 
 }

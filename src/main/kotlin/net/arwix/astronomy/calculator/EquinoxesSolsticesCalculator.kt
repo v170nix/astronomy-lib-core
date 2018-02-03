@@ -115,7 +115,7 @@ class EquinoxesSolsticesCalculator {
     }
 
     fun getResult(year: Int, funCreatePositionCalculator: ((t: Double) -> PositionCalculator)? = null): List<Result> {
-        return runBlocking(CommonPool) {
+        return runBlocking {
             Request.getAll(year).let { requests ->
                 Array(4) { async(CommonPool) { getResult(requests[it], funCreatePositionCalculator) } }
             }.map { it.await() }

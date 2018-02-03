@@ -35,8 +35,8 @@ import java.util.concurrent.TimeUnit
 
 class RiseSetCalc(val date: Calendar,
                   val location: Location,
-                  @Geocentric @Equatorial @Apparent val funGetCoordinates: (T: Double) -> Vector,
-                  val sinRefractionAngle: Double) {
+                  @Geocentric @Equatorial @Apparent private val funGetCoordinates: (T: Double) -> Vector,
+                  private val sinRefractionAngle: Double) {
 
     constructor (date: Calendar,
                  location: Location,

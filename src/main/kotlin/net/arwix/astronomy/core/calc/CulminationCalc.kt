@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package net.arwix.astronomy.calculator
+package net.arwix.astronomy.core.calc
 
-import net.arwix.astronomy.core.Epoch
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
+import net.arwix.astronomy.annotation.Apparent
+import net.arwix.astronomy.annotation.Equatorial
+import net.arwix.astronomy.annotation.Geocentric
 import net.arwix.astronomy.core.calendar.getDeltaT
 import net.arwix.astronomy.core.calendar.getMJD
 import net.arwix.astronomy.core.calendar.resetTime
 import net.arwix.astronomy.core.calendar.setHours
 import net.arwix.astronomy.core.coordinates.Location
 import net.arwix.astronomy.core.vector.Vector
-import net.arwix.astronomy.math.SearchExtremumGoldenMethod
+import net.arwix.astronomy.math.SearchGoldenExtremum
 import java.lang.Math.cos
 import java.lang.Math.sin
 import java.util.*
@@ -32,12 +36,14 @@ import java.util.concurrent.TimeUnit
 /**
  * @param date дата расчета дня
  * @param location долгота и широта в радианах
- * @param funGeocentricEquatorialCoordinates получение геоцентрических экваториальных координат
+ * @param funGetCoordinates получение геоцентрических экваториальных координат
  * @param precision точность в долях часа
  */
-@Deprecated("use CulminationCalc")
-class CulminationCalculator(date: Calendar, location: Location, funGeocentricEquatorialCoordinates: (T: Double, Epoch) -> Vector, private val precision: Double) :
-        Calculator<CulminationCalculator.CulminationResult>(date, location, funGeocentricEquatorialCoordinates) {
+class CulminationCalc(
+        private val date: Calendar,
+        private val location: Location,
+        @Geocentric @Equatorial @Apparent private val funGetCoordinates: (T: Double) -> Vector,
+        private val precision: Double) {
 
     sealed class CulminationResult {
         data class Upper(val isAbove: Boolean, val calendar: Calendar) : CulminationResult()
@@ -46,25 +52,42 @@ class CulminationCalculator(date: Calendar, location: Location, funGeocentricEqu
     }
 
 
-    override fun calls(): CulminationResult {
+    suspend fun calculation(): CulminationResult {
         val innerDate = Calendar.getInstance(date.timeZone).apply { this.timeInMillis = date.timeInMillis }
-        deltaT = innerDate.getDeltaT(TimeUnit.DAYS)
+        val deltaT = innerDate.getDeltaT(TimeUnit.DAYS)
         innerDate.resetTime()
         val MJD0 = innerDate.getMJD()
         val cosLatitude = cos(location.latitude)
         val sinLatitude = sin(location.latitude)
-        return SearchExtremumGoldenMethod(0.0, 24.0, precision, 50,
-                { x -> getSinAltitude(MJD0 + x / 24.0, location.longitude, cosLatitude, sinLatitude) })
+        return SearchGoldenExtremum(0.0, 24.0, precision, 50,
+                { x ->
+                    getSinAltitude(MJD0 + x / 24.0,
+                            deltaT,
+                            location.longitude,
+                            cosLatitude,
+                            sinLatitude,
+                            funGetCoordinates
+                    )
+                })
                 .let {
-                    val upperTime = Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(it.max) }
-                    val lowerTime = Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(it.min) }
+                    val maxHours = async(CommonPool) { it.getMax() }
+                    val minHours = async(CommonPool) { it.getMin() }
+
+                    val upperTime = Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(maxHours.await()) }
+                    val lowerTime = Calendar.getInstance(date.timeZone).apply { time = date.time; setHours(minHours.await()) }
+
                     CulminationResult.UpperLower(
                             CulminationResult.Upper(
-                                    getSinAltitude(upperTime.getMJD(), location.longitude, cosLatitude, sinLatitude) > 0.0,
+                                    getSinAltitude(
+                                            upperTime.getMJD(), deltaT,
+                                            location.longitude, cosLatitude, sinLatitude, funGetCoordinates) > 0.0,
                                     upperTime
                             ),
                             CulminationResult.Lower(
-                                    getSinAltitude(lowerTime.getMJD(), location.longitude, cosLatitude, sinLatitude) > 0.0,
+                                    getSinAltitude(lowerTime.getMJD(),
+                                            location.longitude, deltaT,
+                                            cosLatitude,
+                                            sinLatitude, funGetCoordinates) > 0.0,
                                     lowerTime
                             )
                     )

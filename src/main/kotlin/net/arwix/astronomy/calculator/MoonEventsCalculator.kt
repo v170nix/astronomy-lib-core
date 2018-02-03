@@ -85,7 +85,7 @@ class MoonEventsCalculator(initTimeCalendar: Calendar, cores: Int = 1) {
         val d = if (isNext) 1.0 else -1.0
         return ArrayList<MoonEvent>().apply {
             var k = initK
-            runBlocking(CommonPool) {
+            runBlocking {
                 (0..count step cores).forEach {
                     val array = Array(cores, { i -> async(CommonPool) { getTruePhaseJd(k + d * 0.25 * i) } })
                     (0..cores - 1).forEach { i ->
