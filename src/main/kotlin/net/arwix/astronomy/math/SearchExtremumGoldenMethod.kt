@@ -38,7 +38,7 @@ class SearchExtremumGoldenMethod(private val a: Double, private val b: Double, p
     val min: Double by lazy { doMin(a, b) }
     val max: Double by lazy { doMax(a, b) }
 
-    private fun doMax(a: Double, b: Double): Double = runBlocking {
+    private fun doMax(a: Double, b: Double): Double = runBlocking(CommonPool) {
         var a = a
         var b = b
         var step = 0
@@ -58,7 +58,7 @@ class SearchExtremumGoldenMethod(private val a: Double, private val b: Double, p
         return@runBlocking (a + b) / 2.0
     }
 
-    private fun doMin(a: Double, b: Double): Double = runBlocking {
+    private fun doMin(a: Double, b: Double): Double = runBlocking(CommonPool) {
         var a = a
         var b = b
         var step = 0

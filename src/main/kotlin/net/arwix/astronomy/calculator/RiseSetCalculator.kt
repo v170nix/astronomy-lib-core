@@ -82,7 +82,7 @@ class RiseSetCalculator : Calculator<RiseSetCalculator.Result> {
         innerDate.resetTime()
 
 
-        return runBlocking<Result> {
+        return runBlocking<Result>(CommonPool) {
             val MJD0 = innerDate.getMJD()
             val cosLatitude = cos(location.latitude)
             val sinLatitude = sin(location.latitude)

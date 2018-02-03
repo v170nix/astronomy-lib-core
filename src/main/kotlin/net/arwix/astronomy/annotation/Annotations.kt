@@ -30,3 +30,9 @@ annotation class Equatorial
 
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Azimuth
+
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Apparent
+
+@Retention(AnnotationRetention.RUNTIME)
+annotation class J2000
