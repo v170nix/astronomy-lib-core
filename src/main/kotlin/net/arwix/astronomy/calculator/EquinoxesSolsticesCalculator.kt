@@ -18,7 +18,6 @@ package net.arwix.astronomy.calculator
 
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.runBlocking
 import net.arwix.astronomy.core.PI_OVER_TWO
 import net.arwix.astronomy.core.calendar.*
 import net.arwix.astronomy.core.vector.RectangularVector
@@ -30,7 +29,7 @@ import java.util.*
 class EquinoxesSolsticesCalculator {
 
     companion object {
-        private val precision = 0.1 / 24.0 / 3600.0
+        private const val precision = 0.1 / 24.0 / 3600.0
     }
 
     data class Result(val request: Request, val calendar: Calendar)
@@ -88,7 +87,7 @@ class EquinoxesSolsticesCalculator {
                 }
     }
 
-    fun getResult(request: Request, funCreatePositionCalculator: ((t: Double) -> PositionCalculator)? = null): Result {
+    suspend fun getResult(request: Request, funCreatePositionCalculator: ((t: Double) -> PositionCalculator)? = null): Result {
 
         val calendar = Calendar.getInstance()
         var mjd = calendar
@@ -96,14 +95,14 @@ class EquinoxesSolsticesCalculator {
                 .getMJD()
         var isFirst = true
         var innerPositionCalculator = getPositionCalculator(getJT(mjd), funCreatePositionCalculator)
-        var delta: Double = 100.0
+        var delta = 100.0
         var obliquity = innerPositionCalculator.precession.getNearestObliquityModel(getJT(mjd))
         do {
             if (delta >= 1 && !isFirst) {
                 innerPositionCalculator = getPositionCalculator(getJT(mjd), funCreatePositionCalculator)
                 obliquity = innerPositionCalculator.precession.getNearestObliquityModel(getJT(mjd))
             }
-            val d = innerPositionCalculator.getGeocentricEquatorialPositionApparent(getJT(mjd), positionRequest)
+            val d = innerPositionCalculator.getPosition(getJT(mjd), positionRequest)
             val p = obliquity.rotateFromEquatorialToEcliptic(d).toType<SphericalVector>().phi
 
             delta = Request.getDelta(request, p)
@@ -114,8 +113,8 @@ class EquinoxesSolsticesCalculator {
         return Result(request, calendar)
     }
 
-    fun getResult(year: Int, funCreatePositionCalculator: ((t: Double) -> PositionCalculator)? = null): List<Result> {
-        return runBlocking {
+    suspend fun getResult(year: Int, funCreatePositionCalculator: ((t: Double) -> PositionCalculator)? = null): List<Result> {
+        return run {
             Request.getAll(year).let { requests ->
                 Array(4) { async(CommonPool) { getResult(requests[it], funCreatePositionCalculator) } }
             }.map { it.await() }

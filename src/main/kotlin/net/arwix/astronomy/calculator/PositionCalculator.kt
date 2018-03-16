@@ -16,10 +16,9 @@
 
 package net.arwix.astronomy.calculator
 
-import net.arwix.astronomy.annotation.Ecliptic
-import net.arwix.astronomy.annotation.Equatorial
-import net.arwix.astronomy.annotation.Geocentric
-import net.arwix.astronomy.annotation.Heliocentric
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
+import net.arwix.astronomy.annotation.*
 import net.arwix.astronomy.core.C_Light
 import net.arwix.astronomy.core.JULIAN_DAYS_PER_CENTURY
 import net.arwix.astronomy.core.coordinates.FunGetGeocentricEclipticCoordinates
@@ -31,7 +30,8 @@ import net.arwix.astronomy.core.vector.Vector
 import net.arwix.astronomy.ephemeris.Precession
 
 
-@Geocentric @Equatorial
+@Geocentric
+@Equatorial
 class PositionCalculator(
         val precession: Precession,
         @Heliocentric @Ecliptic val getEarthCoordinatesJ2000: FunGetHeliocentricEclipticCoordinates) {
@@ -43,30 +43,34 @@ class PositionCalculator(
         nutation.equatorialMatrix * obliquity.eclipticToEquatorialMatrix * precession.fromJ2000Matrix
     else
         nutation.equatorialMatrix * precession.fromJ2000Matrix * obliquity.eclipticToEquatorialMatrix
+
     /**
      * @param lightTime in days
      */
-    @Geocentric @Ecliptic
+    @Geocentric
+    @Ecliptic
     private fun getGeoPositionJ2000(T: Double, request: Request, lightTime: Double = 0.0): Vector {
         val dT = lightTime / JULIAN_DAYS_PER_CENTURY
         return when (request) {
-            is Request.GeocentricEclipticBody -> request.getCoordinates(T - dT)
+            is Request.GeocentricEclipticBody -> request.funCoordinates(T - dT)
             is Request.HeliocentricEclipticBody -> {
-                val body = request.getCoordinates(T - dT)
+                val body = request.funCoordinates(T - dT)
                 val earth = getEarthCoordinatesJ2000(T)
                 body - earth
             }
         }
     }
 
-    @Heliocentric @Ecliptic
+    @Heliocentric
+    @Ecliptic
     fun getHeliocentricEclipticPositionJ2000(T: Double, request: Request) = when (request) {
-        is Request.HeliocentricEclipticBody -> request.getCoordinates(T)
-        is Request.GeocentricEclipticBody -> getEarthCoordinatesJ2000(T) + request.getCoordinates(T)
+        is Request.HeliocentricEclipticBody -> request.funCoordinates(T)
+        is Request.GeocentricEclipticBody -> getEarthCoordinatesJ2000(T) + request.funCoordinates(T)
     }
 
 
-    @Heliocentric @Ecliptic
+    @Heliocentric
+    @Ecliptic
     fun getBodyVelocity(T: Double, request: Request, lightTime: Double = 0.01): Vector {
         val body = getHeliocentricEclipticPositionJ2000(T, request)
         val bodyPlus = getHeliocentricEclipticPositionJ2000(T + lightTime / JULIAN_DAYS_PER_CENTURY, request)
@@ -74,7 +78,8 @@ class PositionCalculator(
         return (bodyPlus - body) / lightTime
     }
 
-    @Heliocentric @Ecliptic
+    @Heliocentric
+    @Ecliptic
     fun getEarthVelocity(T: Double): Vector {
         val earth = getEarthCoordinatesJ2000(T)
         val earthPlus = getEarthCoordinatesJ2000(T + 0.01 / JULIAN_DAYS_PER_CENTURY)
@@ -82,13 +87,15 @@ class PositionCalculator(
         return (earthPlus - earth) / .01
     }
 
-    @Geocentric @Equatorial
+    @Geocentric
+    @Equatorial
     fun getGeocentricEquatorialPositionGeometric(T: Double, request: Request): Vector {
         return obliquity.rotateFromEclipticToEquatorial(getGeoPositionJ2000(T, request, 0.0))
     }
 
 
-    @Geocentric @Equatorial
+    @Geocentric
+    @Equatorial
     fun getGeocentricEquatorialPositionApparent(T: Double, request: Request): Vector {
         val bodyGeo = getGeoPositionJ2000(T, request, 0.0)
         val lightTime = bodyGeo.normalize() / C_Light
@@ -102,6 +109,24 @@ class PositionCalculator(
         }
         request.velocitySpeed = bodyVelocity
         return transformMatrix * (bodyGeo - (bodyVelocity - earthVelocity) * lightTime)
+    }
+
+    @Geocentric
+    @Equatorial
+    @Apparent
+    suspend fun getPosition(T: Double, request: Request): Vector {
+        val earthVelocity = async(CommonPool) { KeplerBodySimonJ2000.Earth.getOrbitalPlane(T).velocity }
+        val bodyGeo = getGeoPositionJ2000(T, request, 0.0)
+        val lightTime = bodyGeo.normalize() / C_Light
+        val bodyElements = if (request is Request.HeliocentricEclipticBody && request.keplerElements != null) request.keplerElements else null
+
+        val oldBodyVelocity = request.velocitySpeed
+
+        val bodyVelocity = if (request.usePreviousVelocitySpeed && oldBodyVelocity != null) oldBodyVelocity else {
+            bodyElements?.getOrbitalPlane(T)?.velocity ?: getBodyVelocity(T, request, lightTime)
+        }
+        request.velocitySpeed = bodyVelocity
+        return transformMatrix * (bodyGeo - (bodyVelocity - earthVelocity.await()) * lightTime)
     }
 
     /**
@@ -138,15 +163,17 @@ class PositionCalculator(
 
         internal var velocitySpeed: Vector? = null
 
-        @Heliocentric @Ecliptic
+        @Heliocentric
+        @Ecliptic
         class HeliocentricEclipticBody(
-                val getCoordinates: FunGetHeliocentricEclipticCoordinates,
+                val funCoordinates: FunGetHeliocentricEclipticCoordinates,
                 val keplerElements: KeplerElements? = null,
                 usePreviousVelocitySpeed: Boolean = false) : Request(usePreviousVelocitySpeed)
 
-        @Geocentric @Ecliptic
+        @Geocentric
+        @Ecliptic
         class GeocentricEclipticBody(
-                val getCoordinates: FunGetGeocentricEclipticCoordinates,
+                val funCoordinates: FunGetGeocentricEclipticCoordinates,
                 usePreviousVelocitySpeed: Boolean = false) : Request(usePreviousVelocitySpeed)
     }
 

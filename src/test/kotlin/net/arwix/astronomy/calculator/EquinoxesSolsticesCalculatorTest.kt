@@ -16,6 +16,7 @@
 
 package net.arwix.astronomy.calculator
 
+import kotlinx.coroutines.experimental.runBlocking
 import org.junit.Test
 
 
@@ -23,16 +24,18 @@ class EquinoxesSolsticesCalculatorTest {
 
     @Test
     fun calls() {
-        EquinoxesSolsticesCalculator().getResult(3500).let {
-            it.forEach {
-                println(it.calendar.time.toString())
+        runBlocking {
+            EquinoxesSolsticesCalculator().getResult(3500).let {
+                it.forEach {
+                    println(it.calendar.time.toString())
+                }
             }
-        }
 
-        EquinoxesSolsticesCalculator().getResult(EquinoxesSolsticesCalculator.Request.AutumnEquinox(2017)).let {
+            EquinoxesSolsticesCalculator().getResult(EquinoxesSolsticesCalculator.Request.SpringEquinox(2018)).let {
 
-            println(it.calendar.time.toString())
+                println(it.calendar.time.toString())
 
+            }
         }
     }
 
